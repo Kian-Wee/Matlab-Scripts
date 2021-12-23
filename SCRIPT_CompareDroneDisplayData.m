@@ -1,7 +1,8 @@
 % SCRIPT_DisplayData
-%   Display data received by from OptiTrack software to the command window.
+%   Plot live optitrack data alongside rostopic data
+%   Can be used for comparing 
 %
-%   M. Kutzer 10Mar2016, USNA
+%   Some code adapted from https://github.com/kutzer/OptiTrackToolbox
 
 %% Clear workspace, close all figures, clear command window
 clear all

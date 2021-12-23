@@ -1,8 +1,4 @@
-% SCRIPT_DisplayData
-%   Display data received by from OptiTrack software to the command window.
-%
-%   M. Kutzer 10Mar2016, USNA
-
+% plot rosbag data
 %% Clear workspace, close all figures, clear command window
 clear all
 close all

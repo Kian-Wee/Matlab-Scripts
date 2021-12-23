@@ -1,7 +1,7 @@
 % SCRIPT_DisplayData
-%   Display data received by from OptiTrack software to the command window.
-%
-%   M. Kutzer 10Mar2016, USNA
+%   Display data received by from OptiTrack software in a 2D/3D Graph
+%   TODO, add in mavros conversion
+%   Some code adapted from https://github.com/kutzer/OptiTrackToolbox
 
 %% Clear workspace, close all figures, clear command window
 clear all
@@ -12,7 +12,7 @@ clc
 rate=10; %in Hz, how fast the graph updates
 bodyname='BetaVroom';
 
-px =0;
+px=0;
 py=0;
 pz=0;
 
