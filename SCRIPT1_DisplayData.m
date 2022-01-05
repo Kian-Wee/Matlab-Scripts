@@ -1,7 +1,8 @@
 % SCRIPT_DisplayData
-%   Display data received by from OptiTrack software in a 2D/3D Graph
-%   TODO, add in mavros conversion
+%   Display live data received by from OptiTrack software(Motive) in a 2D/3D Graph
 %   Some code adapted from https://github.com/kutzer/OptiTrackToolbox
+
+% TODO, GRAD COLORS, SAVE TO EXCEL
 
 %% Clear workspace, close all figures, clear command window
 clear all
@@ -9,12 +10,8 @@ close all
 clc
 
 %% Variables
-rate=10; %in Hz, how fast the graph updates
-bodyname='BetaVroom';
-
-px=0;
-py=0;
-pz=0;
+rate=1/10; %in 1/Hz, how fast the graph updates, set to 0 got instant update
+bodyname='VisionVroom';
 
 %% Create OptiTrack object and initialize
 obj = OptiTrack;
@@ -28,34 +25,31 @@ figure;
 
 
 %% Display data
+
+% Plot origin
+plot(0,0,'+k');
+
+prb = obj.RigidBody; % previous location of body, used to plot lines
+
 while true
     
-    % Get current rigid body information
+    % Get current rigid body information, this has to be recalled every time for new frame index
     rb = obj.RigidBody;
-    prb = obj.RigidBody; % previous location of body, used to plot lines
-
     
     % Output frame information
     fprintf('\nFrame Index: %d\n',rb(1).FrameIndex);
-    
-    % Plot origin
-    plot(0,0,'+k');
-    
+
     % Update each rigid body
     for i = 1:numel(rb)
 
-        
         % Check for correct body
-
         % This crashes if there is a glitching body, remove any unused body
         % from the asset tab
         if rb(i).Name == bodyname 
             
-            fprintf(rb(i).Name);
+%            fprintf(rb(i).Name);
 %             fprintf('\t   Position [%f,%f,%f]\n',rb(i).Position/1000);
 %             fprintf('\t Quaternion [%f,%f,%f,%f]\n',rb(i).Quaternion);
-%             fprintf('\t   Position [%f,%f,%f]\n',prb(i).Position/1000);
-%             fprintf('\t Quaternion [%f,%f,%f,%f]\n',prb(i).Quaternion);
                 
             % If body loses tracking, stop plotting
             if isempty(rb(i).Position)== 0
@@ -65,21 +59,16 @@ while true
                     fprintf('\t Quaternion [%f,%f,%f,%f]\n',rb(i).Quaternion);
                     %plot(rb(i).Position(1)/1000,rb(i).Position(2)/1000,'-or');
                     %plot3([rb(i).Position(1)/1000 prb(i).Position(1)/1000],[rb(i).Position(2)/1000 prb(i).Position(2)/1000],[rb(i).Position(3)/1000 prb(i).Position(3)/1000],'-o','Color','b','MarkerSize',10,'MarkerFaceColor','#D9FFFF');
-                    plot3([rb(i).Position(1)/1000 px/1000],[rb(i).Position(2)/1000 py/1000],[rb(i).Position(3)/1000 pz/1000],'b');
-                    %plot3([1 10],[1 10],[1 10]);
-                    %plot3([1.409585 1.409585],[-2.250146 -2.250146],[0.020222 0.020222]);
-                    %p=plot3(rb(i).Position(1)/1000,rb(i).Position(2)/1000,rb(i).Position(3)/1000,'-o','Color','b','MarkerSize',10,'MarkerFaceColor','#D9FFFF');
-                    %plot3(xt1,yt1,zt1,xt2,yt2,zt2)
+                    plot3([rb(i).Position(1)/1000 prb(i).Position(1)/1000],[rb(i).Position(2)/1000 prb(i).Position(2)/1000],[rb(i).Position(3)/1000 prb(i).Position(3)/1000], 'b');
+
+                    prb=rb;
                     
-                    %prb=rb;
-                    px = prb(i).Position(1);
-                    py = prb(i).Position(2);
-                    pz = prb(i).Position(3);
+                % On initialisation, there is no previous point to plot a line towards
                 else
-                   disp("initalising new plot")
-                   prb=rb;
-                   plot3([rb(i).Position(1)/1000 prb(i).Position(1)/1000],[rb(i).Position(2)/1000 prb(i).Position(2)/1000],[rb(i).Position(3)/1000 prb(i).Position(3)/1000], '-r');
-                   init=1;
+                    disp("initalising new plot")
+                    prb=rb; %plot a point
+                    plot3([rb(i).Position(1)/1000 prb(i).Position(1)/1000],[rb(i).Position(2)/1000 prb(i).Position(2)/1000],[rb(i).Position(3)/1000 prb(i).Position(3)/1000], '-r');
+                    init=1;
                 end
                 %title('Title')
                 xlabel('x') 
@@ -89,7 +78,7 @@ while true
                 hold on;
                 drawnow;
                 
-                %pause(1/rate);
+                pause(rate);
 
 %                 fprintf('- %s, Tracking Status: %d\n',rb(i).Name,rb(i).isTracked);
 %                 if rb(i).isTracked
@@ -103,5 +92,3 @@ while true
         end
     end
 end
-        
-        
