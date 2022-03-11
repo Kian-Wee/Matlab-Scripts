@@ -13,7 +13,7 @@ rosshutdown;
 
 %% Create OptiTrack object and initialize
 obj = OptiTrack;
-Initialize(obj,'192.168.1.25','multicast');
+Initialize(obj,'192.168.1.5','multicast');
 
 %% Create Live Graph
 figure;

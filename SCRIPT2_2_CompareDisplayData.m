@@ -1,6 +1,6 @@
 % SCRIPT_DisplayData
 %   Plot live optitrack data alongside rostopic data
-%   Can be used for comparing 
+%   Can be used for comparing , currently compares optitrack rigidbody with a rostopic, may be modified for either
 %
 %   TODO, add in mavros conversion
 %   Some code adapted from https://github.com/kutzer/OptiTrackToolbox
@@ -13,12 +13,12 @@ rosshutdown;
 
 %% Create OptiTrack object and initialize
 obj = OptiTrack;
-Initialize(obj,'192.168.1.25','multicast');
+Initialize(obj,'192.168.1.5','multicast');
 
 %% Create Live Graph
 figure;
-%xlim([0 25]);
-%ylim([-1.1 1.1]);
+xlim([0 5]);
+ylim([0 5]);
 
 %% Subscribe to /uav0/mavros/setpoint_position/local to compare
 rosinit('192.168.1.12');
@@ -27,7 +27,7 @@ setpointsub=rossubscriber('/uav0/mavros/vision_pose/pose',"DataFormat","struct")
 %setpointsub=rossubscriber('/uav0/mavros/setpoint_position/local',"DataFormat","struct");
 
 %% Initalise Variables
-bodyname='VisionVroom';
+bodyname='BetaVroom';
 
 px=0; % previous location of body, used to plot lines
 py=0; 
@@ -36,7 +36,7 @@ vx=0;
 vy=0;
 vz=0;
 
-px2=0;
+px2=0; % previous location of second body
 py2=0;
 pz2=0;
 vx2=0;
@@ -56,11 +56,14 @@ H = uicontrol('Style', 'PushButton', ...
 %% Display data
 while (ishandle(H))
 
+    %Optitrack
     rb = obj.RigidBody; % Get current Optitrack rigid body information
+    fprintf('\nFrame Index: %d\n',rb(1).FrameIndex); % Output frame information
+    
+    %Rostopic
     posedata = receive(setpointsub,10); % Get ROS pose information
-
-    % Output frame information
-    fprintf('\nFrame Index: %d\n',rb(1).FrameIndex);
+    msg=setpointsub.LatestMessage
+    disp(msg.pose.position.x);
     
     % Plot origin
     plot(0,0,'+k');
@@ -71,7 +74,8 @@ while (ishandle(H))
         % Check for correct body and if body is  being tracked
         % This crashes if there is a glitching body, remove any unused body from the asset tab
         % TEST TEMP FIX FOR LACK OF ROS DATA, ADD LIMITS
-        if rb(i).Name == bodyname && isempty(rb(i).Position)== 0 && isempty(posedata)== 0
+        if rb(i).Name == bodyname
+            % && isempty(rb(i).Position)== 0  && isempty(posedata)== 0
                 
             if init ~= 0
                 fprintf('\t   Position [%f,%f,%f]\n',rb(i).Position/1000);
@@ -115,15 +119,15 @@ while (ishandle(H))
                 vy = 0;
                 vz = 0;
 
-                px2 = posedata.pose.position.x;
-                py2 = posedata.pose.position.y;
-                pz2 = posedata.pose.position.z;
-                vx2 = 0;
-                vy2 = 0;
-                vz2 = 0;
+%                 px2 = posedata.pose.position.x;
+%                 py2 = posedata.pose.position.y;
+%                 pz2 = posedata.pose.position.z;
+%                 vx2 = 0;
+%                 vy2 = 0;
+%                 vz2 = 0;
 
                 plot3([rb(i).Position(1)/1000 px/1000],[rb(i).Position(2)/1000 py/1000],[rb(i).Position(3)/1000 pz/1000], 'b');
-                plot3([posedata.pose.position.x px2], [posedata.pose.position.y py2], [posedata.pose.position.z pz2],'r');
+%                 plot3([posedata.pose.position.x px2], [posedata.pose.position.y py2], [posedata.pose.position.z pz2],'r');
                 init=1;
             end
             %title('Title')
@@ -144,5 +148,11 @@ disp("Finished capturing, exporting to excel")
 disp(x)
 writematrix(x,filename,'Sheet',1,'Range','B2');
         
-        
-        
+
+%% Thrust to weight ratio
+% Moment of interia
+% motor constants
+% maximum
+% thrust force = maxrotvelocity(rad/s^@) * motor constant 
+%         
+%        rostopic echo target_attitude for hover throttle @ 2-2.5m 

@@ -11,11 +11,11 @@ clc
 
 %% Variables
 rate=1/10; %in 1/Hz, how fast the graph updates, set to 0 got instant update
-bodyname='VisionVroom';
+bodyname='BetaVroom';
 
 %% Create OptiTrack object and initialize
 obj = OptiTrack;
-Initialize(obj,'192.168.1.25','multicast');
+Initialize(obj,'192.168.1.5','multicast');
 init = 0;
 
 %% Create Live Graph
@@ -44,7 +44,7 @@ while true
 
         % Check for correct body
         % This crashes if there is a glitching body, remove any unused body
-        % from the asset tab
+        % from the asset tab, if not uncomment this line
         if rb(i).Name == bodyname 
             
 %            fprintf(rb(i).Name);

@@ -12,3 +12,5 @@ Use with [ROS Toolbox](https://www.mathworks.com/products/ros.html) and [Optitra
 2.1) Same as 2 but with velocity and other values
 
 3) Plot Rosbag data
+
+4) Graphs, generate graphs for paper
