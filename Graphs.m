@@ -69,13 +69,13 @@ hold off
 
 figure('name','Velocity Error'); hold on
 grid on
-a1 = plot(m.Timestamp,m.XVelocityError,'-o','LineWidth',1); M1 = "X-Velocity Error";
-a2 = plot(m.Timestamp,m.YVelocityError,'LineWidth',1); M2 = "Y-Velocity Error";
-a3 = plot(m.Timestamp,m.ZVelocityError,'--','LineWidth',1); M3 = "Z-Velocity Error";
-title('Velocity Error against Time','fontname','times');
-ylabel("Velocity(m/s)",'fontname','times');
-xlabel("Time(s)",'fontname','times');
-legend([a1, a2, a3], [M1, M2, M3]);
+a1 = plot(m.Timestamp,m.XVelocityError,':','LineWidth',4); M1 = "X-Velocity Error";
+a2 = plot(m.Timestamp,m.YVelocityError,'--','LineWidth',4); M2 = "Y-Velocity Error";
+a3 = plot(m.Timestamp,m.ZVelocityError,'-','LineWidth',4); M3 = "Z-Velocity Error";
+title('Velocity Error against Time','fontname','times','fontsize',25);
+ylabel("Velocity(m/s)",'fontname','times','fontsize',25, 'FontWeight', 'bold');
+xlabel("Time(s)",'fontname','times','fontsize',25, 'FontWeight', 'bold');
+legend([a1, a2, a3], [M1, M2, M3],'fontsize',25);
 hold off
 
 %%
