@@ -11,7 +11,7 @@ clc
 
 %% Variables
 rate=1/10; %in 1/Hz, how fast the graph updates, set to 0 got instant update
-bodyname='BetaVroom';
+bodyname='hi';
 
 %% Create OptiTrack object and initialize
 obj = OptiTrack;
@@ -45,7 +45,7 @@ while true
         % Check for correct body
         % This crashes if there is a glitching body, remove any unused body
         % from the asset tab, if not uncomment this line
-        if rb(i).Name == bodyname 
+        if convertCharsToStrings(rb(i).Name) == convertCharsToStrings(bodyname)
             
 %            fprintf(rb(i).Name);
 %             fprintf('\t   Position [%f,%f,%f]\n',rb(i).Position/1000);
