@@ -9,6 +9,8 @@ Use with [ROS Toolbox](https://www.mathworks.com/products/ros.html) and [Optitra
 
 1.1) Stream optitrack data and broadcast over a UDP port
 
+1.1) Stream optitrack data and broadcast to ROS2 topic
+
 2) Plot live optitrack data and rosdata in a 3D space
 
 2.1) Same as 2 but with velocity and other values
