@@ -9,7 +9,7 @@ Use with [ROS Toolbox](https://www.mathworks.com/products/ros.html) and [Optitra
 
 1.1) Stream optitrack data and broadcast over a UDP port
 
-1.1) Stream optitrack data and broadcast to ROS2 topic
+1.2) Stream optitrack data and broadcast to ROS2 topic(See px4_msg installation notes at the bottom
 
 2) Plot live optitrack data and rosdata in a 3D space
 
@@ -46,3 +46,20 @@ Aside from that, removing or blocking any other physical reflective surfaces hel
 
 ### Network Setup
 For the most part, this should be rather straightforward. You can determine the ip address of the optitrack PC by typing ```ipconfig``` into cmd. Ensure that the optitrack is streaming in the data streaming tab in motive and that the ip address is set to the local network and not loopback, and set the z axis to up for convention. If the optitrack stream is still unable to be detected, check that the optitrack pc may be pinged and following that ensure that all the windows firewall rules allow for motive's ports to passthrough.
+
+
+## Notes on installing custom msgs(PX4_msgs)
+make sure you ros2genmsg() file path refers to root folder ("custom/") that contains px4_msgs ie not inside px4_msgs("custom/px4_msgs") itself.
+
+there is alot of weird errors trying to generate ros2 msgs, need 2 download visual studio to set up the c++ compiler
+ros2genmsg(pwd)
+errors
+Identifying message files in folder 'C:/Users/area_/OneDrive/Documents/GitHub/Matlab-Scripts'..Validating message files in folder 'C:/Users/area_/OneDrive/Documents/GitHub/Matlab-Scripts'..Done.
+Done.
+[0/1] Generating MATLAB interfaces for custom message packages... 0%Error using ros.internal.ROSProjectBuilder
+Current compiler MinGW64 Compiler (C++) is not supported for ROS build. To choose a compiler, run 'mex -setup cpp'.
+
+fix
+download visual studio 2022 (this will auto download c++ compilers too i sthink)
+mex -setup:'C:\Program Files\MATLAB\R2023a\bin\win64\mexopts\msvcpp2022.xml' C++
+mex -setup cpp
