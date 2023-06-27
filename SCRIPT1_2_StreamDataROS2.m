@@ -28,7 +28,7 @@ arr = blanks(numel(rb));
 for i = 1:numel(rb)
     my_field = strcat(convertCharsToStrings(rb(i).Name));
     variable.(my_field) = optitrack_class;
-    variable.(my_field).init(convertCharsToStrings(rb(i).Name),optitrack_node);
+    variable.(my_field).init(convertCharsToStrings(rb(i).Name),optitrack_node,"px4");
 end
 
 disp('Outputing poses for: ');
