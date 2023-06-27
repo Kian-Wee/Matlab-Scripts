@@ -18,18 +18,18 @@ classdef optitrack_class < handle
         obj.body_pose_msg.pose.position.x = x;
         obj.body_pose_msg.pose.position.y = y;
         obj.body_pose_msg.pose.position.z = z;
-%         obj.body_pose_msg.pose.orientation.w = ww;
-%         obj.body_pose_msg.pose.orientation.x = wx;
-%         obj.body_pose_msg.pose.orientation.y = wy;
-%         obj.body_pose_msg.pose.orientation.z = wz;
+        obj.body_pose_msg.pose.orientation.w = ww;
+        obj.body_pose_msg.pose.orientation.x = wx;
+        obj.body_pose_msg.pose.orientation.y = wy;
+        obj.body_pose_msg.pose.orientation.z = wz;
 
-        % Janky hack for euler on the same topic;
-        eu=quat2eul(ww,wx,wy,wz);
-        obj.body_pose_msg.pose.orientation.w = 0;
-        obj.body_pose_msg.pose.orientation.x = eu(2);
-        obj.body_pose_msg.pose.orientation.y = eu(1);
-        obj.body_pose_msg.pose.orientation.z = eu(0);
-        disp(quat2eul(ww,wx,wy,wz));
+        % % Janky hack for euler on the same topic;
+        % eu=quat2eul(ww,wx,wy,wz);
+        % obj.body_pose_msg.pose.orientation.w = 0;
+        % obj.body_pose_msg.pose.orientation.x = eu(2);
+        % obj.body_pose_msg.pose.orientation.y = eu(1);
+        % obj.body_pose_msg.pose.orientation.z = eu(0);
+        % disp(quat2eul(ww,wx,wy,wz));
 
         obj.body_pose_msg.header.stamp.sec = cast(posixtime(datetime), "int32");
         obj.body_pose_msg.header.frame_id ='/odom';
