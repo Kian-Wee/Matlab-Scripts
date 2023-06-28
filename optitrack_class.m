@@ -27,8 +27,13 @@ classdef optitrack_class < handle
          obj.body_pose_msg.timestamp = uint64(rostime("now").Sec*10^9+rostime("now").Nsec);
          obj.body_pose_msg.timestamp_sample = uint64(rostime("now").Sec*10^9+rostime("now").Nsec);
          obj.body_pose_msg.pose_frame_ned= 1; % NED earth-fixed frame;
-         obj.body_pose_msg.position=[x,y,z];
-         obj.body_pose_msg.q=[ww,wx,wy,wz];
+         obj.body_pose_msg.position(1)=x;
+         obj.body_pose_msg.position(2)=y;
+         obj.body_pose_msg.position(3)=z;
+         obj.body_pose_msg.q(1)=ww;
+         obj.body_pose_msg.q(2)=wx;
+         obj.body_pose_msg.q(3)=wy;
+         obj.body_pose_msg.q(4)=wz;
       else
          obj.body_pose_msg.header.stamp.sec = cast(posixtime(datetime), "int32");
          obj.body_pose_msg.header.frame_id ='/odom';
