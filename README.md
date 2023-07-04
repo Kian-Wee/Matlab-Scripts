@@ -49,6 +49,8 @@ For the most part, this should be rather straightforward. You can determine the 
 
 
 ## Notes on installing custom msgs(PX4_msgs)
+Ensure that the submodule are initalised after cloning with git submodule init ; git submodule update after cloning (or use github desktop)
+
 make sure you ros2genmsg() file path refers to root folder ("custom/") that contains px4_msgs ie not inside px4_msgs("custom/px4_msgs") itself.
 
 there is alot of weird errors trying to generate ros2 msgs, need 2 download visual studio to set up the c++ compiler
