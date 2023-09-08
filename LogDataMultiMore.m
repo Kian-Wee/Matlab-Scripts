@@ -9,10 +9,10 @@ close all
 clc
 
 %% Variables
-import optitrack_class_2.*
+import body_obj.*
 
 rate=1/360; %in 1/Hz, how fast the graph updates
-bodyname=["bola" "post"];
+bodyname=["moose"]; % multiple bodies allowed
 x=["Mtime","Otime","name","x","y","z","qx","qy","qz","qw"]; % Array to store to excel
 
 %% Create OptiTrack object
@@ -26,7 +26,7 @@ arr = blanks(numel(rb));
 
 for i = 1:numel(rb)
     my_field = strcat(convertCharsToStrings(rb(i).Name));
-    variable.(my_field) = optitrack_class_2;
+    variable.(my_field) = body_obj;
     variable.(my_field).init(convertCharsToStrings(rb(i).Name));
 end
 
@@ -57,15 +57,15 @@ while (ishandle(H))
         % from the asset tab, if not uncomment this line
         for j = 1:numel(bodyname)
             if strcmp(rb(i).Name,bodyname(j)) == 1
-    
+
                 % If body loses tracking, stop plotting
                 if isempty(rb(i).Position)== 0
-                    fprintf('\t %s \n',string(rb(i).Name));
-                    fprintf('\t Position [%f,%f,%f]\n', [round(rb(i).Position(1)/1000,2),round(rb(i).Position(2)/1000,2),round(rb(i).Position(3)/1000,2)]);
-                    fprintf('\t Quaternion [%f,%f,%f,%f]\n',rb(i).Quaternion);
+%                     fprintf('\t %s \n',string(rb(i).Name));
+%                     fprintf('\t Position [%f,%f,%f]\n', [round(rb(i).Position(1)/1000,2),round(rb(i).Position(2)/1000,2),round(rb(i).Position(3)/1000,2)]);
+%                     fprintf('\t Quaternion [%f,%f,%f,%f]\n',rb(i).Quaternion);
                     my_field = strcat(convertCharsToStrings(rb(i).Name));
                     variable.(my_field).updatepose(rb(i));
-                    disp(variable.(my_field).euler(1));
+%                     disp(variable.(my_field).velocity)
                     x=[x; [now rb(i).TimeStamp string(rb(i).Name) rb(i).Position(1) rb(i).Position(2) rb(i).Position(3) rb(i).Quaternion(1) rb(i).Quaternion(2) rb(i).Quaternion(3) rb(i).Quaternion(4)]];
                 end
             end
