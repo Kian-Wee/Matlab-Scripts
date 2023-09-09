@@ -9,6 +9,7 @@ classdef body_obj < handle
       velocity=[0 0 0];
       past_position=[0,0,0];
       past_time=0;
+      pitch_norm=0;
       body_roll;
       roll_rate;
       body_rotation;
@@ -29,6 +30,7 @@ classdef body_obj < handle
         else
             obj.velocity=(obj.position-obj.past_position)/((rb.TimeStamp-obj.past_time)*1000);
         end
+        obj.pitch_norm=((1-rb.Position(2)*cos(obj.euler(3)))/sin(obj.euler(3)));
         obj.past_time=rb.TimeStamp;
       end
 
