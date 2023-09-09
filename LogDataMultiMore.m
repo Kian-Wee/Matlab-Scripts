@@ -11,9 +11,9 @@ clc
 %% Variables
 import body_obj.*
 
-rate=1/360; %in 1/Hz, how fast the graph updates
-bodyname=["moose"]; % multiple bodies allowed
-x=["Mtime","Otime","name","x","y","z","qx","qy","qz","qw"]; % Array to store to excel
+rate=1/5; %in 1/Hz, how fast the graph updates
+bodyname=["gp"]; % multiple bodies allowed
+x=["Mtime","Otime","name","x","y","z","qx","qy","qz","qw","ëuy","ëup","ëur","vx","vy", "vz","pitch_norm"]; % Array to store to excel
 
 %% Create OptiTrack object
 obj = OptiTrack;
@@ -61,20 +61,21 @@ while (ishandle(H))
                 % If body loses tracking, stop plotting
                 if isempty(rb(i).Position)== 0
 %                     fprintf('\t %s \n',string(rb(i).Name));
-%                     fprintf('\t Position [%f,%f,%f]\n', [round(rb(i).Position(1)/1000,2),round(rb(i).Position(2)/1000,2),round(rb(i).Position(3)/1000,2)]);
+%                      fprintf('\t Position [%f,%f,%f]\n', [round(rb(i).Position(1)/1000,2),round(rb(i).Position(2)/1000,2),round(rb(i).Position(3)/1000,2)]);
 %                     fprintf('\t Quaternion [%f,%f,%f,%f]\n',rb(i).Quaternion);
                     my_field = strcat(convertCharsToStrings(rb(i).Name));
                     variable.(my_field).updatepose(rb(i));
-%                     disp(variable.(my_field).velocity)
-                    x=[x; [now rb(i).TimeStamp string(rb(i).Name) rb(i).Position(1) rb(i).Position(2) rb(i).Position(3) rb(i).Quaternion(1) rb(i).Quaternion(2) rb(i).Quaternion(3) rb(i).Quaternion(4)]];
+                    %disp(variable.(my_field).position);
+                    x=[x; [now rb(i).TimeStamp string(rb(i).Name) rb(i).Position(1) rb(i).Position(2) rb(i).Position(3) rb(i).Quaternion(1) rb(i).Quaternion(2) rb(i).Quaternion(3) rb(i).Quaternion(4) variable.(my_field).euler(1) variable.(my_field).euler(2) variable.(my_field).euler(3) variable.(my_field).velocity(1) variable.(my_field).velocity(2) variable.(my_field).velocity(3) variable.(my_field).pitch_norm]];
                 end
             end
         end
     end
     drawnow
+    pause(rate)
 end
 
 %% Write to excel
-filename = 'C:\Users\area_\Documents\testdata.xlsx';
+filename = 'C:\Users\area_\OneDrive\Desktop\testdata.xlsx';
 disp("FINISH")
 writematrix(x,filename,'Sheet',1,'Range','B2'); % ("Array",filename,~,sheetname,~,range of cells to paste in 'E1:I5')
