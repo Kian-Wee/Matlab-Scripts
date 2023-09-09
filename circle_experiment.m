@@ -6,13 +6,17 @@ clc
 %% Variables
 import body_obj.*
 
-rate=1/60; %in 1/Hz, how fast the graph updates
-bodyname=["vip"]; % multiple bodies allowed
-x=["Mtime","Otime","name","x","y","z","qx","qy","qz","qw","ëuy","ëup","ëur","vx","vy", "vz","pitch_norm"]; % Array to store to excel
+rate=1/16; %in 1/Hz, how fast the graph updates
+bodyname=["gp"]; % multiple bodies allowed
+data_ar=["Mtime","Otime","name","x","y","z","qx","qy","qz","qw","ëuy","ëup","ëur","vx","vy", "vz","pitch_norm"]; % Array to store to excel
 
 %% Create OptiTrack object
 obj = OptiTrack;
 Initialize(obj,'192.168.1.5','multicast'); %Ensure broadcast frame id is on, loop interface is set to this ip and transmission type is set to multicast
+
+up = udpport("IPV4");
+% up = udpport("datagram","OutputDatagramSize",3);
+up.EnableBroadcast = true;
 
 % Initalise all bodies at first
 rb = obj.RigidBody;
@@ -28,6 +32,8 @@ end
 disp('Outputing poses for: ');
 disp(variable)
 
+computerip="192.168.1.139"; % ip of computer to be written to
+port=1234; % port of the computer to be written to
 %% Break loop if keypress to save to excel
 DlgH = figure;
 H = uicontrol('Style', 'PushButton', ...
@@ -126,6 +132,7 @@ while ishandle(H)
                     my_field = strcat(convertCharsToStrings(rb(k).Name));
                     variable.(my_field).updatepose(rb(k));
                     disp(rad2deg(variable.(my_field).euler));
+%                     disp(rad2deg(variable.("gp").euler));
 %                    x=[x; [now rb(i).TimeStamp string(rb(i).Name) rb(i).Position(1) rb(i).Position(2) rb(i).Position(3) rb(i).Quaternion(1) rb(i).Quaternion(2) rb(i).Quaternion(3) rb(i).Quaternion(4) variable.(my_field).euler(1) variable.(my_field).euler(2) variable.(my_field).euler(3) variable.(my_field).velocity(1) variable.(my_field).velocity(2) variable.(my_field).velocity(3) variable.(my_field).pitch_norm]];
                 end
             end
@@ -133,10 +140,10 @@ while ishandle(H)
     end
     drawnow
 
-    mea_pos = zeros(variable.(vip).position); % extract position measurements in real time from opti track 
-    mea_vel = zeros(variable.(vip).velocity); % extract velocity measurements in real time from opti track
-    if variable.(my_field).euler(3) == 0
-        mea_pitch = variable.(my_field).euler(2);
+    mea_pos = transpose(variable.gp.position); % extract position measurements in real time from opti track 
+    mea_vel = transpose(variable.gp.velocity); % extract velocity measurements in real time from opti track
+    if variable.gp.euler(3) == 0
+        mea_pitch = variable.gp.euler(2);
     end
 
     mea_xy_pos_mag = sqrt((mea_pos(1,:)).^2 + (mea_pos(2,:)).^2);
@@ -147,13 +154,13 @@ while ishandle(H)
     end 
     
     %%%% (Precession Rate Tracking)
-    latest_mag = mea_xy_pos_mag - sqrt(8);
-    latest_precession_rate_angle = acos(latest/old);
-
-    precession_rate = -1 * ((latest-old_mag)/abs((latest-old_mag))) * (latest_precession_rate_angle/update_rate); % if negative in opti-track means correct direction, I multiply by -1 to make it positive so its in the correct direction
-
-    old_mag = latest_mag;
-    old_precession_rate_angle = latest_precession_rate_angle;
+%     latest_mag = mea_xy_pos_mag - sqrt(8);
+%     latest_precession_rate_angle = acos(latest/old);
+% 
+%     precession_rate = -1 * ((latest-old_mag)/abs((latest-old_mag))) * (latest_precession_rate_angle/update_rate); % if negative in opti-track means correct direction, I multiply by -1 to make it positive so its in the correct direction
+% 
+%     old_mag = latest_mag;
+%     old_precession_rate_angle = latest_precession_rate_angle;
     
     %%%% (Test)
     % xy
@@ -208,7 +215,9 @@ while ishandle(H)
 
     %% Collective thrust (can be used to test)
     cmd_z = dot(transpose(zd),transpose(a_des)); %% command sent to motor, need to include filter to make sure negative cmds dun go thru
-      
+    disp("cmd_z: ");
+    disp(cmd_z);  
+
     %% Diff Flat Feedforward component (actual)
 %     ff_n = (derivatives(4,i) + linear_drag_coeff(:,1)*derivatives(3,i));
 %     v = [derivatives(4,i),0,0]
@@ -229,7 +238,14 @@ while ishandle(H)
 %     final_flap_input = input(:,1);
     
     i = i + 1;
-    trigger = trigger + time_per_setpt; % temporary holding
+%     trigger = trigger + update_rate; % temporary holding
+
+
+    input = [0,0,cmd_z]; %heading, flap, motor
+    fprintf('\t   Input [%f,%f,%f]\n', input);
+    write(up,input,"double", computerip,port);
+
+
     pause(rate);
 end
 

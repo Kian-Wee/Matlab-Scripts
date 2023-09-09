@@ -379,7 +379,7 @@ classdef ExpAuxiliaryFunctions
                 end
             end
             
-            mag = zeros(9,200);
+            mag = zeros(8,200);
             
             mag(1,:) = sqrt((diff_pos(1,:)).^2 + (diff_pos(2,:)).^2); %pos
             mag(2,:) = sqrt((diff_vel(1,:)).^2 + (diff_vel(2,:)).^2); %vel
@@ -392,7 +392,7 @@ classdef ExpAuxiliaryFunctions
 
             mag(6,:) = direction; %direction
             mag(7,1) = time_per_setpt; %update rate
-            mag(8,:) = x; 
+            mag(8,1:9) = x; 
             
         end
 
