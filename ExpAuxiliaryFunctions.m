@@ -41,7 +41,7 @@ classdef ExpAuxiliaryFunctions
             
         end
 
-        function [input] = flap_output(obj, azi, quadrant, gain_disk_pitch, desired_heading,body_rate_y)
+        function [input] = flap_output(obj, azi, quadrant, gain_disk_pitch, desired_heading, body_rate_y)
             % rmb to put filter to prevent over actuation
             input = zeros(1,2);
             upper_bound = zeros(1,1);
@@ -50,10 +50,11 @@ classdef ExpAuxiliaryFunctions
             heading = desired_heading;
             pitch = zeros(1,1);
             Motor_Pulse = zeros(1,1);
+            phase_delay = pi/2;
             
             if quadrant == 0 
-                upper_bound = pi/2 + pi/4; 
-                lower_bound = pi/2 - pi/4;
+                upper_bound = pi/2 + pi/4 + phase_delay; 
+                lower_bound = pi/2 - pi/4 + phase_delay; 
                 if abs(azimuth) < upper_bound && abs(azimuth) > lower_bound
                     tilt_xw = sin(azimuth); % tilt about yw heading in x direction 
                     pitch = tilt_xw * gain_disk_pitch * -1; % only for cyclic y, -1 because craft is always pitching forward wrt to shifts in heading
@@ -65,8 +66,8 @@ classdef ExpAuxiliaryFunctions
 
 
             elseif quadrant == 1
-                upper_bound = (-pi/2) + heading + pi/4; 
-                lower_bound = (-pi/2) + heading - pi/4;
+                upper_bound = (-pi/2) + heading + pi/4 + phase_delay; 
+                lower_bound = (-pi/2) + heading - pi/4 + phase_delay;
                 activate_cos = zeros(1,1);
                 if lower_bound < -pi
                     lower_bound = (lower_bound + pi) + pi;
@@ -99,8 +100,8 @@ classdef ExpAuxiliaryFunctions
             
                 
             elseif quadrant == 1.5 
-                upper_bound = pi + pi/4; 
-                lower_bound = pi/4; 
+                upper_bound = pi + pi/4 + phase_delay; 
+                lower_bound = pi/4 + phase_delay; 
                 % no need for lower bound
                 if abs(azimuth) > upper_bound || abs(azimuth) < lower_bound
                     tilt_xw = cos(azimuth); % tilt about yw heading in x direction 
@@ -113,8 +114,8 @@ classdef ExpAuxiliaryFunctions
             
             
             elseif quadrant == 2
-                upper_bound = pi/2 + heading + pi/4; 
-                lower_bound = pi/2 + heading - pi/4;
+                upper_bound = pi/2 + heading + pi/4 + phase_delay; 
+                lower_bound = pi/2 + heading - pi/4 + phase_delay;
                 activate_cos = zeros(1,1); 
             
                 if upper_bound > 0
@@ -149,8 +150,8 @@ classdef ExpAuxiliaryFunctions
             
             
             elseif quadrant == 2.5
-                upper_bound = pi/2 + pi/4; 
-                lower_bound = pi/2 - pi/4;
+                upper_bound = pi/2 + pi/4 + phase_delay; 
+                lower_bound = pi/2 - pi/4 + phase_delay;
                 if abs(azimuth) < upper_bound && abs(azimuth) > lower_bound
                     tilt_xw = sin(azimuth); % tilt about yw heading in x direction 
                     pitch = tilt_xw * gain_disk_pitch; % only for cyclic y
@@ -162,8 +163,8 @@ classdef ExpAuxiliaryFunctions
             
             
             elseif quadrant == 3
-                upper_bound = (-pi/2) + heading + pi/4; 
-                lower_bound = (-pi/2) + heading - pi/4;
+                upper_bound = (-pi/2) + heading + pi/4 + phase_delay; 
+                lower_bound = (-pi/2) + heading - pi/4 + phase_delay;
                 activate_cos = zeros(1,1);  
                 if lower_bound < 0
                     %lower_bound = (lower_bound + pi) + pi;
@@ -196,8 +197,8 @@ classdef ExpAuxiliaryFunctions
             
             
             elseif quadrant == 3.5
-                upper_bound = pi + pi/4; 
-                lower_bound = pi/4; 
+                upper_bound = pi + pi/4 + phase_delay; 
+                lower_bound = pi/4 + phase_delay; 
                 % no need for lower bound
                 if abs(azimuth) > upper_bound || abs(azimuth) < lower_bound
                     tilt_xw = cos(azimuth); % tilt about yw heading in x direction 
@@ -210,8 +211,8 @@ classdef ExpAuxiliaryFunctions
             
             
             elseif quadrant == 4
-                upper_bound = pi/2 + heading + pi/4; 
-                lower_bound = pi/2 + heading - pi/4;
+                upper_bound = pi/2 + heading + pi/4 + phase_delay; 
+                lower_bound = pi/2 + heading - pi/4 + phase_delay;
                 activate_cos = zeros(1,1); 
             
                 if upper_bound > 0
