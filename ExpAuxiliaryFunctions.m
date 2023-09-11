@@ -1,5 +1,16 @@
 classdef ExpAuxiliaryFunctions
     methods
+        
+        function [new_heading]  = new_heading_input(obj,heading)
+            phase_delay = pi/2;
+            new_heading = heading + phase_delay;
+
+            if new_heading > pi
+                new_heading = (new_heading - pi) - pi;
+            end
+
+        end
+
         function [quadrant] = quadrant_output(obj,heading)
     
             quad = zeros(1,1); % unsigned, let the gain settle the sign
@@ -53,11 +64,11 @@ classdef ExpAuxiliaryFunctions
             phase_delay = pi/2;
             
             if quadrant == 0 
-                upper_bound = pi/2 + pi/4 + phase_delay; 
-                lower_bound = pi/2 - pi/4 + phase_delay; 
+                upper_bound = pi/2 + pi/4; 
+                lower_bound = pi/2 - pi/4;
                 if abs(azimuth) < upper_bound && abs(azimuth) > lower_bound
                     tilt_xw = sin(azimuth); % tilt about yw heading in x direction 
-                    pitch = tilt_xw * gain_disk_pitch * -1; % only for cyclic y, -1 because craft is always pitching forward wrt to shifts in heading
+                    pitch = tilt_xw * -1; % only for cyclic y, -1 because craft is always pitching forward wrt to shifts in heading
                     Motor_Pulse =  (pitch/abs(pitch)) * 1;
                 else
                     pitch = 0;
@@ -66,8 +77,8 @@ classdef ExpAuxiliaryFunctions
 
 
             elseif quadrant == 1
-                upper_bound = (-pi/2) + heading + pi/4 + phase_delay; 
-                lower_bound = (-pi/2) + heading - pi/4 + phase_delay;
+                upper_bound = (-pi/2) + heading + pi/4; 
+                lower_bound = (-pi/2) + heading - pi/4;
                 activate_cos = zeros(1,1);
                 if lower_bound < -pi
                     lower_bound = (lower_bound + pi) + pi;
@@ -77,7 +88,7 @@ classdef ExpAuxiliaryFunctions
                 if activate_cos == 0
                     if (azimuth < upper_bound && azimuth > lower_bound) || (azimuth < pi + upper_bound && azimuth > pi + lower_bound) % otherside
                         tilt_xw = sin(azimuth); % tilt about yw heading in x direction 
-                        pitch = tilt_xw * gain_disk_pitch * -1; % only for cyclic y, -1 because craft is always pitching forward wrt to shifts in heading
+                        pitch = tilt_xw * -1; % only for cyclic y, -1 because craft is always pitching forward wrt to shifts in heading
                         Motor_Pulse =  (pitch/abs(pitch)) * 1;
                     else
                         pitch = 0;
@@ -86,11 +97,11 @@ classdef ExpAuxiliaryFunctions
                 else
                     if azimuth < upper_bound || azimuth > lower_bound
                         tilt_xw = cos(azimuth); % tilt about yw heading in x direction             
-                        pitch = tilt_xw * gain_disk_pitch * -1; % only for cyclic y, -1 because craft is always pitching forward wrt to shifts in heading
+                        pitch = tilt_xw * -1; % only for cyclic y, -1 because craft is always pitching forward wrt to shifts in heading
                         Motor_Pulse =  (pitch/abs(pitch)) * 1;       
                     elseif azimuth < upper_bound + pi && azimuth > lower_bound - pi % otherside
                         tilt_xw = cos(azimuth); % tilt about yw heading in x direction 
-                        pitch = tilt_xw * gain_disk_pitch * -1; % only for cyclic y, -1 because craft is always pitching forward wrt to shifts in heading
+                        pitch = tilt_xw * -1; % only for cyclic y, -1 because craft is always pitching forward wrt to shifts in heading
                         Motor_Pulse =  (pitch/abs(pitch)) * 1;
                     else
                         pitch = 0;
@@ -100,12 +111,12 @@ classdef ExpAuxiliaryFunctions
             
                 
             elseif quadrant == 1.5 
-                upper_bound = pi + pi/4 + phase_delay; 
-                lower_bound = pi/4 + phase_delay; 
+                upper_bound = pi + pi/4; 
+                lower_bound = pi/4; 
                 % no need for lower bound
                 if abs(azimuth) > upper_bound || abs(azimuth) < lower_bound
                     tilt_xw = cos(azimuth); % tilt about yw heading in x direction 
-                    pitch = tilt_xw * gain_disk_pitch * -1; % only for cyclic y, -1 because craft is always pitching forward wrt to shifts in heading 
+                    pitch = tilt_xw * -1; % only for cyclic y, -1 because craft is always pitching forward wrt to shifts in heading 
                     Motor_Pulse =  (pitch/abs(pitch)) * 1;
                 else
                     pitch = 0;
@@ -114,8 +125,8 @@ classdef ExpAuxiliaryFunctions
             
             
             elseif quadrant == 2
-                upper_bound = pi/2 + heading + pi/4 + phase_delay; 
-                lower_bound = pi/2 + heading - pi/4 + phase_delay;
+                upper_bound = pi/2 + heading + pi/4; 
+                lower_bound = pi/2 + heading - pi/4;
                 activate_cos = zeros(1,1); 
             
                 if upper_bound > 0
@@ -125,22 +136,22 @@ classdef ExpAuxiliaryFunctions
                 end
             
                 if activate_cos == 0
-                    if (azimuth < upper_bound && azimuth > lower_bound) || (azimuth < pi + lower_bound && azimuth > pi + upper_bound) % otherside first
+                    if (azimuth < upper_bound && azimuth > lower_bound) || (azimuth > pi + lower_bound && azimuth < pi + upper_bound) % otherside first
                         tilt_xw = sin(azimuth); % tilt about yw heading in x direction 
-                        pitch = tilt_xw * gain_disk_pitch; % only for cyclic y
+                        pitch = tilt_xw; % only for cyclic y
                         Motor_Pulse =  (pitch/abs(pitch)) * 1;
                     else
                         pitch = 0;
                         Motor_Pulse = 0;
                     end
                 else
-                    if azimuth > pi + lower_bound || azimuth < -(pi + upper_bound)
+                    if azimuth > pi + lower_bound || azimuth < -(pi - upper_bound)
                         tilt_xw = cos(azimuth); % tilt about yw heading in x direction 
-                        pitch = tilt_xw * gain_disk_pitch * -1; % only for cyclic y, -1 because craft is always pitching forward wrt to shifts in heading
+                        pitch = tilt_xw * -1; % only for cyclic y, -1 because craft is always pitching forward wrt to shifts in heading
                         Motor_Pulse =  (pitch/abs(pitch)) * 1;
                     elseif azimuth < upper_bound && azimuth > lower_bound
                         tilt_xw = cos(azimuth); % tilt about yw heading in x direction 
-                        pitch = tilt_xw * gain_disk_pitch * -1; % only for cyclic y, -1 because craft is always pitching forward wrt to shifts in heading
+                        pitch = tilt_xw * -1; % only for cyclic y, -1 because craft is always pitching forward wrt to shifts in heading
                         Motor_Pulse =  (pitch/abs(pitch)) * 1;
                     else
                         pitch = 0;
@@ -150,11 +161,11 @@ classdef ExpAuxiliaryFunctions
             
             
             elseif quadrant == 2.5
-                upper_bound = pi/2 + pi/4 + phase_delay; 
-                lower_bound = pi/2 - pi/4 + phase_delay;
+                upper_bound = pi/2 + pi/4; 
+                lower_bound = pi/2 - pi/4;
                 if abs(azimuth) < upper_bound && abs(azimuth) > lower_bound
                     tilt_xw = sin(azimuth); % tilt about yw heading in x direction 
-                    pitch = tilt_xw * gain_disk_pitch; % only for cyclic y
+                    pitch = tilt_xw; % only for cyclic y
                     Motor_Pulse =  (pitch/abs(pitch)) * 1;
                 else
                     pitch = 0;
@@ -163,8 +174,8 @@ classdef ExpAuxiliaryFunctions
             
             
             elseif quadrant == 3
-                upper_bound = (-pi/2) + heading + pi/4 + phase_delay; 
-                lower_bound = (-pi/2) + heading - pi/4 + phase_delay;
+                upper_bound = (-pi/2) + heading + pi/4; 
+                lower_bound = (-pi/2) + heading - pi/4;
                 activate_cos = zeros(1,1);  
                 if lower_bound < 0
                     %lower_bound = (lower_bound + pi) + pi;
@@ -185,7 +196,7 @@ classdef ExpAuxiliaryFunctions
                         tilt_xw = cos(azimuth); % tilt about yw heading in x direction 
                         pitch = tilt_xw * gain_disk_pitch * -1; % only for cyclic y
                         Motor_Pulse =  (pitch/abs(pitch)) * 1;
-                    elseif azimuth > pi - lower_bound || azimuth < -pi + upper_bound % otherside first
+                    elseif azimuth > pi + lower_bound || azimuth < -pi + upper_bound % otherside first
                         tilt_xw = cos(azimuth); % tilt about yw heading in x direction 
                         pitch = tilt_xw * gain_disk_pitch * -1; % only for cyclic y
                         Motor_Pulse =  (pitch/abs(pitch)) * 1;
@@ -197,12 +208,12 @@ classdef ExpAuxiliaryFunctions
             
             
             elseif quadrant == 3.5
-                upper_bound = pi + pi/4 + phase_delay; 
-                lower_bound = pi/4 + phase_delay; 
+                upper_bound = pi + pi/4; 
+                lower_bound = pi/4; 
                 % no need for lower bound
                 if abs(azimuth) > upper_bound || abs(azimuth) < lower_bound
                     tilt_xw = cos(azimuth); % tilt about yw heading in x direction 
-                    pitch = tilt_xw * gain_disk_pitch * -1;
+                    pitch = tilt_xw;
                     Motor_Pulse =  (pitch/abs(pitch)) * 1;
                 else
                     pitch = 0;
@@ -211,11 +222,11 @@ classdef ExpAuxiliaryFunctions
             
             
             elseif quadrant == 4
-                upper_bound = pi/2 + heading + pi/4 + phase_delay; 
-                lower_bound = pi/2 + heading - pi/4 + phase_delay;
+                upper_bound = pi/2 + heading + pi/4; 
+                lower_bound = pi/2 + heading - pi/4;
                 activate_cos = zeros(1,1); 
             
-                if upper_bound > 0
+                if upper_bound > pi
                     %lower_bound = (lower_bound + pi) + pi;
                     %lower_bound = 0;
                     activate_cos = 1;
@@ -224,7 +235,7 @@ classdef ExpAuxiliaryFunctions
                 if activate_cos == 0
                     if (azimuth < upper_bound && azimuth > lower_bound) || (azimuth > -pi + lower_bound && azimuth < -pi + upper_bound) % otherside first
                         tilt_xw = sin(azimuth); % tilt about yw heading in x direction 
-                        pitch = tilt_xw * gain_disk_pitch * -1; % only for cyclic y, -1 because craft is always pitching forward wrt to shifts in heading
+                        pitch = tilt_xw * -1; % only for cyclic y, -1 because craft is always pitching forward wrt to shifts in heading
                         Motor_Pulse =  (pitch/abs(pitch)) * 1;
                     else
                         pitch = 0;
@@ -233,11 +244,11 @@ classdef ExpAuxiliaryFunctions
                 else
                      if azimuth > lower_bound || azimuth < -pi + upper_bound - pi
                         tilt_xw = cos(azimuth); % tilt about yw heading in x direction 
-                        pitch = tilt_xw * gain_disk_pitch * -1; % only for cyclic y
+                        pitch = tilt_xw; % only for cyclic y
                         Motor_Pulse =  (pitch/abs(pitch)) * 1;
                      elseif azimuth < upper_bound - pi && azimuth > -pi + lower_bound
                         tilt_xw = cos(azimuth); % tilt about yw heading in x direction 
-                        pitch = tilt_xw * gain_disk_pitch * -1; % only for cyclic y
+                        pitch = tilt_xw; % only for cyclic y
                         Motor_Pulse =  (pitch/abs(pitch)) * 1;
                      else
                         pitch = 0;

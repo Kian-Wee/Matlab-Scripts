@@ -79,7 +79,7 @@ kvel = 1;
 kpos_z = 10;
 kd_z = 80;
 prp = [1,1]; % bodyrate gain
-ppq = 0.5; % body acc gain
+ppq = 0.25; % body acc gain
 
 % init a_des
 a_des = zeros(3,1);
@@ -88,8 +88,8 @@ a_des = zeros(3,1);
 g = -9.81;
 
 % linear drag coeff
-Dx = 0.03;
-Dy = 0.03;
+Dx = 0.1;
+Dy = 0.1;
 Dz = 0.01;
 linear_drag_coeff = [Dx,Dy,Dz];
 
@@ -174,10 +174,10 @@ while ishandle(H)
     
     %%%% (Test)
     % xy
-    a_fb_xy = abs((kpos*(derivatives(1,test) - mea_xy_pos_mag)) + (kvel*(derivatives(2,test) - mea_xy_vel_mag))); % xy_magnitude plane since yaw can be easily taken care of 
-    gain = kpos*(derivatives(1,test) - mea_xy_pos_mag)/abs(kpos*(derivatives(1,test) - mea_xy_pos_mag));
-    a_rd = derivatives(2,test) * linear_drag_coeff(1,1);
-    a_des(1,:) = a_fb_xy + derivatives(3,test) - a_rd; % fits into the x axis of ades
+%     a_fb_xy = abs((kpos*(derivatives(1,test) - mea_xy_pos_mag)) + (kvel*(derivatives(2,test) - mea_xy_vel_mag))); % xy_magnitude plane since yaw can be easily taken care of 
+%     gain = kpos*(derivatives(1,test) - mea_xy_pos_mag)/abs(kpos*(derivatives(1,test) - mea_xy_pos_mag));
+%     a_rd = derivatives(2,test) * linear_drag_coeff(1,1);
+%     a_des(1,:) = a_fb_xy + derivatives(3,test) - a_rd; % fits into the x axis of ades
 
     % z (can be used to test, needs to activate hover flaps mode)
 %     a_fb_z = kpos_z*(desired_alt - mea_pos(3,1)); % z
@@ -185,16 +185,16 @@ while ishandle(H)
 %     zd = a_des / norm(a_des); % 3 x 1 = z_desired, if empty it would be 0 0 1  
 
     % direction (testing) 
-    desired_heading = derivatives(6,test);
+    % desired_heading = derivatives(6,test);
 
 
 
     %%%% (Actual)
     %% xy 
-%     a_fb_xy = abs((kpos*(derivatives(1,i) - mea_xy_pos_mag)) + (kvel*(derivatives(2,i) - mea_xy_vel_mag))); % xy_magnitude plane since yaw can be easily taken care of 
-%     gain = kpos*(derivatives(1,i) - mea_xy_pos_mag)/abs(kpos*(derivatives(1,i) - mea_xy_pos_mag));
-%     a_rd = derivatives(2,i) * linear_drag_coeff(1,1);
-%     a_des(1,:) = a_fb_xy + derivatives(3,i) - a_rd; % fits into the x axis of ades 
+    a_fb_xy = abs((kpos*(derivatives(1,i) - mea_xy_pos_mag)) + (kvel*(derivatives(2,i) - mea_xy_vel_mag))); % xy_magnitude plane since yaw can be easily taken care of 
+    gain = kpos*(derivatives(1,i) - mea_xy_pos_mag)/abs(kpos*(derivatives(1,i) - mea_xy_pos_mag));
+    a_rd = derivatives(2,i) * linear_drag_coeff(1,1);
+    a_des(1,:) = a_fb_xy + derivatives(3,i) - a_rd; % fits into the x axis of ades 
 
     %% z (can be used to test, needs to activate hover flaps mode)
     z_error = mea_pos(3,1)-desired_alt;
@@ -207,7 +207,8 @@ while ishandle(H)
     z_error_past = z_error;
 
     % direction (actual)
-    %desired_heading = derivatives(6,i);
+    desired_heading = derivatives(6,i);
+    true_heading = desired_heading;
     
     %% Bodyrates (for collective thrust test, this entire section can be disabled)
     qz = eul2quat(mea_euler); % default seq is q = [w x y z]
@@ -250,13 +251,14 @@ while ishandle(H)
     end
     
     %% testing
-    body_rate_ref = 0;
+    % body_rate_ref = 0;
     
     cmd_bodyrate = ppq * (body_rates(:,2) - mea_pitch_rate + body_rate_ref); % gain for cyclic, multiply this to azimuth sin or cos from quadrant, the other value is the desired heading  
+    desired_heading = exp.new_heading_input(desired_heading);
     quadrant = exp.quadrant_output(desired_heading);
     init_input = exp.flap_output(mea_rotation,quadrant,gain,desired_heading,abs(cmd_bodyrate));    
     final_flap_input = init_input(:,1) * 15;
-    disp("body_rate");
+    disp("quadrant");
     disp(quadrant);
 
     %% trigger
@@ -267,7 +269,7 @@ while ishandle(H)
 %     trigger = trigger + update_rate; % temporary holding
 
     
-    input = [0,final_flap_input,cmd_z]; %heading, flap, motor
+    input = [true_heading,final_flap_input,cmd_z]; %heading, flap, motor
     fprintf('Input [%f,%f,%f]\n', input);
     disp("counter");
     disp(i);
