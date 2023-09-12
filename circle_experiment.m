@@ -8,7 +8,8 @@ import body_obj.*
 
 rate=1/360; %in 1/Hz, how fast the graph updates
 bodyname=["gp"]; % multiple bodies allowed
-data_ar=["Mtime","Otime","name","x","y","z","qx","qy","qz","qw","ëuy","ëup","ëur","vx","vy", "vz","pitch_norm"]; % Array to store to excel
+%data_arr=["Mtime","Otime","name","x","y","z","qx","qy","qz","qw","euy","eup","eur","eury","eurp","eurr","vx","vy", "vz","pitch_norm"]; % Array to store to excel
+data_arr=["Mtime","Otime","name","x","y","z","qx","qy","qz","qw","vx","vy", "vz"]; % Array to store to excel
 
 %% Create OptiTrack object
 obj = OptiTrack;
@@ -43,7 +44,7 @@ drawnow
 
 
 exp = ExpAuxiliaryFunctions;
-derivatives = exp.circle_setpoints_anti_cw(1,2,2,1); % circle anti_cw setpoints
+derivatives = exp.circle_setpoints_anti_cw_halved(1,2.2,2.2,0.5); % circle anti_cw setpoints
 % derivatives = exp.circle_setpoints_cw(1,-2,2,1); % circle cw setpoints
 
 % vel = load("invert_vel.mat");
@@ -74,12 +75,12 @@ mea_xy_vel_mag = zeros(1,1);
 trigger = 1; % temporary trigger for now to go into offboard mode
 
 % gains
-kpos = 1;
+kpos = 1.6;
 kvel = 1;
 kpos_z = 10;
 kd_z = 80;
 prp = [1,1]; % bodyrate gain
-ppq = 0.25; % body acc gain
+ppq = 0.063; % body acc gain
 
 % init a_des
 a_des = zeros(3,1);
@@ -88,8 +89,8 @@ a_des = zeros(3,1);
 g = -9.81;
 
 % linear drag coeff
-Dx = 0.1;
-Dy = 0.1;
+Dx = 0.03;
+Dy = 0.03;
 Dz = 0.01;
 linear_drag_coeff = [Dx,Dy,Dz];
 
@@ -107,11 +108,11 @@ body_rates = zeros(1,2);
 % need to insert update rate, loop at 1/time_per_setpt freq which is currently 16 hz
 update_rate = derivatives(7,1);
 
-i = 150; % counter
+i = 2060; % counter
 old = 0;
 old_precession_rate_angle = 0;
 z_error_past = 0;
-test = 50;
+test = 1;
 while ishandle(H)
 %%
     % Get current rigid body information, this has to be recalled every time for new frame index
@@ -139,7 +140,8 @@ while ishandle(H)
                     disp("in deg");
                     disp(rad2deg(variable.(my_field).euler));
 %                     disp(rad2deg(variable.("gp").euler));
-%                    x=[x; [now rb(i).TimeStamp string(rb(i).Name) rb(i).Position(1) rb(i).Position(2) rb(i).Position(3) rb(i).Quaternion(1) rb(i).Quaternion(2) rb(i).Quaternion(3) rb(i).Quaternion(4) variable.(my_field).euler(1) variable.(my_field).euler(2) variable.(my_field).euler(3) variable.(my_field).velocity(1) variable.(my_field).velocity(2) variable.(my_field).velocity(3) variable.(my_field).pitch_norm]];
+%                   data_arr=[data_arr; [now rb(k).TimeStamp string(rb(k).Name) variable.(my_field).position(1) variable.(my_field).position(2) variable.(my_field).position(3) variable.(my_field).quarternion(1) variable.(my_field).quarternion(2) variable.(my_field).quarternion(3) variable.(my_field).quarternion(4) variable.(my_field).euler(1) variable.(my_field).euler(2) variable.(my_field).euler(3) variable.(my_field).euler_rate(1) variable.(my_field).euler_rate(2) variable.(my_field).euler_rate(3) variable.(my_field).velocity(1) variable.(my_field).velocity(2) variable.(my_field).velocity(3)]];
+                    data_arr=[data_arr; [now rb(k).TimeStamp string(rb(k).Name) variable.(my_field).position(1) variable.(my_field).position(2) variable.(my_field).position(3) variable.(my_field).quarternion(1) variable.(my_field).quarternion(2) variable.(my_field).quarternion(3) variable.(my_field).quarternion(4)  variable.(my_field).velocity(1) variable.(my_field).velocity(2) variable.(my_field).velocity(3)]];
                 end
             end
         end
@@ -158,8 +160,9 @@ while ishandle(H)
     mea_xy_vel_mag = sqrt((mea_vel(1,:)).^2 + (mea_vel(2,:)).^2);
     mea_euler = [0,mea_pitch,0]; % default seq is about ZYX
     mea_pitch_rate = variable.gp.euler_rate(2);
-%%
-    if i > 200
+%%  reset
+ 
+    if i > 2260
         i = 1;
     end 
     
@@ -185,7 +188,7 @@ while ishandle(H)
 %     zd = a_des / norm(a_des); % 3 x 1 = z_desired, if empty it would be 0 0 1  
 
     % direction (testing) 
-    % desired_heading = derivatives(6,test);
+%     desired_heading = derivatives(6,test);
 
 
 
@@ -253,6 +256,12 @@ while ishandle(H)
     %% testing
     % body_rate_ref = 0;
     
+%     if i > 561 && i < 1130
+%         ppq = 0.07;
+%     else 
+%         ppq = 0.07;
+%     end
+
     cmd_bodyrate = ppq * (body_rates(:,2) - mea_pitch_rate + body_rate_ref); % gain for cyclic, multiply this to azimuth sin or cos from quadrant, the other value is the desired heading  
     desired_heading = exp.new_heading_input(desired_heading);
     quadrant = exp.quadrant_output(desired_heading);
@@ -260,16 +269,19 @@ while ishandle(H)
     final_flap_input = init_input(:,1) * 15;
     disp("quadrant");
     disp(quadrant);
+    disp("heading");
+    disp(true_heading);
 
     %% trigger
-    trigger = trigger + 1;
-    if mod(trigger,16) == 0
-        i = i + 1;
-    end
+%     trigger = trigger + 1;
+%     if mod(trigger,16) == 0
+
+    i = i + 1;
+%     end
 %     trigger = trigger + update_rate; % temporary holding
 
     
-    input = [true_heading,final_flap_input,cmd_z]; %heading, flap, motor
+    input = [true_heading,final_flap_input,cmd_z,mea_rotation]; %heading, flap, motor, yaw
     fprintf('Input [%f,%f,%f]\n', input);
     disp("counter");
     disp(i);
@@ -282,4 +294,4 @@ end
 %% Write to excel
 filename = 'C:\Users\area_\OneDrive\Desktop\testdata.xlsx';
 disp("FINISH")
-writematrix(x,filename,'Sheet',1,'Range','B2'); % ("Array",filename,~,sheetname,~,range of cells to paste in 'E1:I5')
+writematrix(data_arr,filename,'Sheet',1,'Range','B2'); % ("Array",filename,~,sheetname,~,range of cells to paste in 'E1:I5')
