@@ -44,7 +44,11 @@ drawnow
 
 
 exp = ExpAuxiliaryFunctions;
-derivatives = exp.circle_setpoints_anti_cw_halved(1,2.2,2.2,0.5); % circle anti_cw setpoints
+mid_x = 1.7;
+mid_y = 2.0;
+radius = 0.5;
+speed = 0.3;
+derivatives = exp.circle_setpoints_anti_cw(speed,mid_x,mid_y,radius); % circle anti_cw setpoints, radius 0.5, speed 0.5
 % derivatives = exp.circle_setpoints_cw(1,-2,2,1); % circle cw setpoints
 
 % vel = load("invert_vel.mat");
@@ -56,7 +60,7 @@ derivatives = exp.circle_setpoints_anti_cw_halved(1,2.2,2.2,0.5); % circle anti_
 %%% step 1 - attitude control:
 %%  assign the heading at the period of the time interval which is pi/50 
 %   take in measurements, assume the following for now as pseudo
-opti_offset = 0.5;
+opti_offset = 0.5; % original was 0.5
 ideal_hgt = 1.5;
 desired_alt = ideal_hgt - opti_offset;
 mea_pos = zeros(3,1); % extract position measurements in real time from opti track 
@@ -67,20 +71,18 @@ mea_pitch = zeros(1,1); % euler angle for disk pitch which is body roll, anyway 
 mea_precession_angle = zeros(1,1); % euler angle for disk roll, precession angle
 mea_pitch_rate = zeros(1,1); % euler angle for disk pitch rate which is body roll rate
 
-
-
 mea_rotation = zeros(1,1); % body yaw angle for azimuth, must be in RAD
 mea_xy_pos_mag = zeros(1,1);
 mea_xy_vel_mag = zeros(1,1);
 trigger = 1; % temporary trigger for now to go into offboard mode
 
 % gains
-kpos = 1.6;
+kpos = 1.8;
 kvel = 1;
 kpos_z = 10;
-kd_z = 80;
+kd_z = 105;
 prp = [1,1]; % bodyrate gain
-ppq = 0.063; % body acc gain
+ppq = 0.09; % body acc gain
 
 % init a_des
 a_des = zeros(3,1);
@@ -108,11 +110,14 @@ body_rates = zeros(1,2);
 % need to insert update rate, loop at 1/time_per_setpt freq which is currently 16 hz
 update_rate = derivatives(7,1);
 
-i = 2060; % counter
-old = 0;
+sample_per_loop = derivatives(10,1);
+i = (sample_per_loop * 2) - 100; % counter
+old_mag = 0;
 old_precession_rate_angle = 0;
 z_error_past = 0;
 test = 1;
+old_timestamp = 0;
+
 while ishandle(H)
 %%
     % Get current rigid body information, this has to be recalled every time for new frame index
@@ -137,8 +142,10 @@ while ishandle(H)
 %                     fprintf('\t Quaternion [%f,%f,%f,%f]\n',rb(i).Quaternion);
                     my_field = strcat(convertCharsToStrings(rb(k).Name));
                     variable.(my_field).updatepose(rb(k));
-                    disp("in deg");
-                    disp(rad2deg(variable.(my_field).euler));
+                    disp("timestamp");
+                    %disp(rad2deg(variable.(my_field).euler));
+                    disp(1/(rb(k).TimeStamp - old_timestamp));
+                    old_timestamp = rb(k).TimeStamp; 
 %                     disp(rad2deg(variable.("gp").euler));
 %                   data_arr=[data_arr; [now rb(k).TimeStamp string(rb(k).Name) variable.(my_field).position(1) variable.(my_field).position(2) variable.(my_field).position(3) variable.(my_field).quarternion(1) variable.(my_field).quarternion(2) variable.(my_field).quarternion(3) variable.(my_field).quarternion(4) variable.(my_field).euler(1) variable.(my_field).euler(2) variable.(my_field).euler(3) variable.(my_field).euler_rate(1) variable.(my_field).euler_rate(2) variable.(my_field).euler_rate(3) variable.(my_field).velocity(1) variable.(my_field).velocity(2) variable.(my_field).velocity(3)]];
                     data_arr=[data_arr; [now rb(k).TimeStamp string(rb(k).Name) variable.(my_field).position(1) variable.(my_field).position(2) variable.(my_field).position(3) variable.(my_field).quarternion(1) variable.(my_field).quarternion(2) variable.(my_field).quarternion(3) variable.(my_field).quarternion(4)  variable.(my_field).velocity(1) variable.(my_field).velocity(2) variable.(my_field).velocity(3)]];
@@ -162,18 +169,19 @@ while ishandle(H)
     mea_pitch_rate = variable.gp.euler_rate(2);
 %%  reset
  
-    if i > 2260
+    if i > sample_per_loop*2
         i = 1;
     end 
     
     %%%% (Precession Rate Tracking)
-%     latest_mag = mea_xy_pos_mag - sqrt(8);
-%     latest_precession_rate_angle = acos(latest/old);
-% 
-%     precession_rate = -1 * ((latest-old_mag)/abs((latest-old_mag))) * (latest_precession_rate_angle/update_rate); % if negative in opti-track means correct direction, I multiply by -1 to make it positive so its in the correct direction
-% 
-%     old_mag = latest_mag;
-%     old_precession_rate_angle = latest_precession_rate_angle;
+    omega_mea = mea_xy_vel_mag / radius; % omega tracking of the body  
+    latest_mag = mea_xy_pos_mag - sqrt(mid_x^2 + mid_y^2);
+    latest_precession_rate_angle = acos(latest_mag/old_mag);
+
+    precession_rate = -1 * ((latest_mag-old_mag)/abs((latest_mag-old_mag))) * (latest_precession_rate_angle/update_rate); % if negative in opti-track means correct direction, I multiply by -1 to make it positive so its in the correct direction
+
+    old_mag = latest_mag;
+    old_precession_rate_angle = latest_precession_rate_angle;
     
     %%%% (Test)
     % xy
@@ -261,7 +269,13 @@ while ishandle(H)
 %     else 
 %         ppq = 0.07;
 %     end
+   
+    %% precession controller
+    pc = 0.01 * (omega_mea - precession_rate); 
+    disp("precession signal");
+    disp(pc);
 
+    %% precession controller
     cmd_bodyrate = ppq * (body_rates(:,2) - mea_pitch_rate + body_rate_ref); % gain for cyclic, multiply this to azimuth sin or cos from quadrant, the other value is the desired heading  
     desired_heading = exp.new_heading_input(desired_heading);
     quadrant = exp.quadrant_output(desired_heading);

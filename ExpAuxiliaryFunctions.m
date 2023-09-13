@@ -321,7 +321,7 @@ classdef ExpAuxiliaryFunctions
             hz = 360;
             time_per_setpt = 1/hz;
             sample_per_loop = (time_per_eigth * 8) / time_per_setpt;  % 2258
-            sample_per_loop = 2260;
+            sample_per_loop = ceil(sample_per_loop); % only need to change here...
             % 1 m/s = (pi/4) / (1 rad/s) = pi/4
             % 2 m/s = (pi/4) / (2 rad/s) = pi/8
             % 3 m/s = (pi/4) / (3 rad/s) = pi/12
@@ -334,11 +334,11 @@ classdef ExpAuxiliaryFunctions
             [circle_xy,circle_xyd,circle_xydd,circle_xyddd,circle_xydddd,circle_xypp,circle_xytimepoints,circle_xytsamples] = minsnappolytraj(circle_wpts_xy,circle_tpts,numsamples);
             %[zy,zyd,zydd,zyddd,zydddd,zypp,zytimepoints,zytsamples] = minsnappolytraj(wpts_zy,tpts,numsamples);
             
-            circle_final_pose = zeros(2,4521); % 565 per round, therefore (565 * 2) + 1 = 1131
-            circle_final_vel = zeros(2,4521);
-            circle_final_acc = zeros(2,4521);
-            circle_final_jerk = zeros(2,4521);
-            circle_final_snap = zeros(2,4521);
+            circle_final_pose = zeros(2,(sample_per_loop*2)+1); % 565 per round, therefore (565 * 2) + 1 = 1131
+            circle_final_vel = zeros(2,(sample_per_loop*2)+1);
+            circle_final_acc = zeros(2,(sample_per_loop*2)+1);
+            circle_final_jerk = zeros(2,(sample_per_loop*2)+1);
+            circle_final_snap = zeros(2,(sample_per_loop*2)+1);
             
             % final_z_pose = zy(1,101:300);
             % final_z_vel = zyd(1,101:300);
@@ -347,47 +347,47 @@ classdef ExpAuxiliaryFunctions
             % final_z_snap = zydddd(1,101:300);
             
             for v = 1:2
-                circle_final_pose(v,:) = circle_xy(v,2261:6781);
-                circle_final_vel(v,:) = circle_xyd(v,2261:6781);
-                circle_final_acc(v,:) = circle_xydd(v,2261:6781);
-                circle_final_jerk(v,:) = circle_xyddd(v,2261:6781);
-                circle_final_snap(v,:) = circle_xydddd(v,2261:6781);
+                circle_final_pose(v,:) = circle_xy(v,sample_per_loop+1:(sample_per_loop*3)+1);
+                circle_final_vel(v,:) = circle_xyd(v,sample_per_loop+1:(sample_per_loop*3)+1);
+                circle_final_acc(v,:) = circle_xydd(v,sample_per_loop+1:(sample_per_loop*3)+1);
+                circle_final_jerk(v,:) = circle_xyddd(v,sample_per_loop+1:(sample_per_loop*3)+1);
+                circle_final_snap(v,:) = circle_xydddd(v,sample_per_loop+1:(sample_per_loop*3)+1);
             end
             
             % because the above solution starts from the same point but moves in a
             % clockwise fashion as compared to what I wanted which was anti-clockwise
             % from the same starting pt
             
-            invert_pos = zeros(2,4521);
+            invert_pos = zeros(2,(sample_per_loop*2)+1);
             invert_pos(2,:) = (circle_final_pose(2,:));
             invert_pos(1,:) = (circle_final_pose(1,:));
             
-            invert_vel = zeros(2,4521);
+            invert_vel = zeros(2,(sample_per_loop*2)+1);
             invert_vel(2,:) = (circle_final_vel(2,:));
             invert_vel(1,:) = (circle_final_vel(1,:));
             
-            invert_acc = zeros(2,4521);
+            invert_acc = zeros(2,(sample_per_loop*2)+1);
             invert_acc(2,:) = (circle_final_acc(2,:));
             invert_acc(1,:) = (circle_final_acc(1,:));
             
-            invert_jer = zeros(2,4521);
+            invert_jer = zeros(2,(sample_per_loop*2)+1);
             invert_jer(2,:) = (circle_final_jerk(2,:));
             invert_jer(1,:) = (circle_final_jerk(1,:));
             
-            invert_sna = zeros(2,4521);
+            invert_sna = zeros(2,(sample_per_loop*2)+1);
             invert_sna(2,:) = (circle_final_snap(2,:));
             invert_sna(1,:) = (circle_final_snap(1,:));
             
-            diff_pos = zeros(2,4520); 
-            diff_vel = zeros(2,4520);
-            diff_acc = zeros(2,4520);
+            diff_pos = zeros(2,(sample_per_loop*2)); 
+            diff_vel = zeros(2,(sample_per_loop*2));
+            diff_acc = zeros(2,(sample_per_loop*2));
             
             % used in the later parts
-            diff_jer = zeros(2,4520);
-            diff_sna = zeros(2,4520);
+            diff_jer = zeros(2,(sample_per_loop*2));
+            diff_sna = zeros(2,(sample_per_loop*2));
             
             for v = 1:2
-                for i = 1:4520
+                for i = 1:(sample_per_loop*2)
                     diff_pos(v,i) = invert_pos(v,i+1) - invert_pos(v,i); 
                     diff_vel(v,i) = invert_vel(v,i+1) - invert_vel(v,i); 
                     diff_acc(v,i) = invert_acc(v,i+1) - invert_acc(v,i); 
@@ -396,7 +396,7 @@ classdef ExpAuxiliaryFunctions
                 end
             end
             
-            mag = zeros(11,4520);
+            mag = zeros(10,(sample_per_loop*2));
             
             mag(1,:) = sqrt((diff_pos(1,:)).^2 + (diff_pos(2,:)).^2); %pos
             mag(2,:) = sqrt((diff_vel(1,:)).^2 + (diff_vel(2,:)).^2); %vel
@@ -411,7 +411,7 @@ classdef ExpAuxiliaryFunctions
             mag(7,1) = time_per_setpt; %update rate
             mag(8,1:9) = y; 
             mag(9,:) = direction_deg; %direction
-            %mag(10,:) = circle_xy(1,1:1130);
+            mag(10,1) = sample_per_loop;
             %circle_xy(2,1:1130)
         end
 
