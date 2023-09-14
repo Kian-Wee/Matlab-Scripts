@@ -9,7 +9,7 @@ import body_obj.*
 rate=1/360; %in 1/Hz, how fast the graph updates
 bodyname=["gp"]; % multiple bodies allowed
 %data_arr=["Mtime","Otime","name","x","y","z","qx","qy","qz","qw","euy","eup","eur","eury","eurp","eurr","vx","vy", "vz","pitch_norm"]; % Array to store to excel
-data_arr=["Mtime","Otime","name","x","y","z","qx","qy","qz","qw","vx","vy", "vz"]; % Array to store to excel
+data_arr=["Mtime","Otime","name","x","y","z","euy","eup","eur","vx","vy","vz","bod_rates","thrust","heading"]; % Array to store to excel
 
 %% Create OptiTrack object
 obj = OptiTrack;
@@ -44,7 +44,8 @@ drawnow
 
 
 exp = ExpAuxiliaryFunctions;
-mid_x = 1.7;
+% inverted for y and x 
+mid_x = 2.0;
 mid_y = 2.0;
 radius = 0.5;
 speed = 0.3;
@@ -77,15 +78,16 @@ mea_xy_vel_mag = zeros(1,1);
 trigger = 1; % temporary trigger for now to go into offboard mode
 
 % gains
-kpos = 1.8;
-kvel = 1;
+kpos = 55.0;
+kvel = 65.0;
 kpos_z = 10;
 kd_z = 105;
 prp = [1,1]; % bodyrate gain
-ppq = 0.09; % body acc gain
+ppq = 0.08; % body acc gain
 
 % init a_des
 a_des = zeros(3,1);
+a_des_z = zeros(3,1);
 
 % gravity
 g = -9.81;
@@ -118,6 +120,14 @@ z_error_past = 0;
 test = 1;
 old_timestamp = 0;
 
+% Logging
+log_bod_rates = 0;
+log_head = 0;
+log_thrust = 0;
+
+p_array = [];
+t_array = [];
+
 while ishandle(H)
 %%
     % Get current rigid body information, this has to be recalled every time for new frame index
@@ -148,13 +158,26 @@ while ishandle(H)
                     old_timestamp = rb(k).TimeStamp; 
 %                     disp(rad2deg(variable.("gp").euler));
 %                   data_arr=[data_arr; [now rb(k).TimeStamp string(rb(k).Name) variable.(my_field).position(1) variable.(my_field).position(2) variable.(my_field).position(3) variable.(my_field).quarternion(1) variable.(my_field).quarternion(2) variable.(my_field).quarternion(3) variable.(my_field).quarternion(4) variable.(my_field).euler(1) variable.(my_field).euler(2) variable.(my_field).euler(3) variable.(my_field).euler_rate(1) variable.(my_field).euler_rate(2) variable.(my_field).euler_rate(3) variable.(my_field).velocity(1) variable.(my_field).velocity(2) variable.(my_field).velocity(3)]];
-                    data_arr=[data_arr; [now rb(k).TimeStamp string(rb(k).Name) variable.(my_field).position(1) variable.(my_field).position(2) variable.(my_field).position(3) variable.(my_field).quarternion(1) variable.(my_field).quarternion(2) variable.(my_field).quarternion(3) variable.(my_field).quarternion(4)  variable.(my_field).velocity(1) variable.(my_field).velocity(2) variable.(my_field).velocity(3)]];
+                    data_arr=[data_arr; [now rb(k).TimeStamp string(rb(k).Name) variable.(my_field).position(1) variable.(my_field).position(2) variable.(my_field).position(3) variable.(my_field).euler(3) variable.(my_field).euler(2) variable.(my_field).euler(1) variable.(my_field).velocity(1) variable.(my_field).velocity(2) variable.(my_field).velocity(3) log_bod_rates log_thrust log_head]];
+                    
                 end
             end
         end
     end
+   
+%     disp("pitch");
+%     disp(variable.gp.euler(2));
+    hold on
+    p_array(end) = variable.gp.euler(2);
+    t_array(end) = rb(k).TimeStamp;
+    plot(t_array,p_array,'g');
+    xlabel('counter');
+    ylabel('pitch');
+    title("Pitch vs Time");
+    
     drawnow
-
+    hold off
+    
     mea_pos = transpose(variable.gp.position); % extract position measurements in real time from opti track 
     mea_vel = transpose(variable.gp.velocity); % extract velocity measurements in real time from opti track
     mea_rotation = variable.gp.euler(3); 
@@ -167,6 +190,7 @@ while ishandle(H)
     mea_xy_vel_mag = sqrt((mea_vel(1,:)).^2 + (mea_vel(2,:)).^2);
     mea_euler = [0,mea_pitch,0]; % default seq is about ZYX
     mea_pitch_rate = variable.gp.euler_rate(2);
+    
 %%  reset
  
     if i > sample_per_loop*2
@@ -192,8 +216,8 @@ while ishandle(H)
 
     % z (can be used to test, needs to activate hover flaps mode)
 %     a_fb_z = kpos_z*(desired_alt - mea_pos(3,1)); % z
-%     a_des(3,:) = a_fb_z + g;
-%     zd = a_des / norm(a_des); % 3 x 1 = z_desired, if empty it would be 0 0 1  
+%     a_des_z(3,:) = a_fb_z + g;
+%     zd = a_des_z / norm(a_des_z); % 3 x 1 = z_desired, if empty it would be 0 0 1  
 
     % direction (testing) 
 %     desired_heading = derivatives(6,test);
@@ -214,12 +238,17 @@ while ishandle(H)
     disp ("alt: ");
     disp(mea_pos(3,1));
     a_des(3,:) = a_fb_z + g - a_rd_z;
-    zd = a_des / norm(a_des); % 3 x 1 = z_desired, if empty it would be 0 0 1  
+    a_des_z(3,:) = a_fb_z + g - a_rd_z;
+
+
+    zd = a_des / norm(a_des); % consists of all 3 axis, this was segregated due to collective and cyclic thrust decoupling  
+    zd_z = a_des_z / norm(a_des_z); % 3 x 1 = z_desired, if empty it would be 0 0 1 
     z_error_past = z_error;
 
     % direction (actual)
     desired_heading = derivatives(6,i);
     true_heading = desired_heading;
+    log_head = true_heading;
     
     %% Bodyrates (for collective thrust test, this entire section can be disabled)
     qz = eul2quat(mea_euler); % default seq is q = [w x y z]
@@ -243,11 +272,13 @@ while ishandle(H)
 %     disp(body_rates);
 
     %% Collective thrust (can be used to test)
-    cmd_z = dot(transpose(zd),transpose(a_des)); %% command sent to motor, need to include filter to make sure negative cmds dun go thru
+    % cmd_z = dot(transpose(zd),transpose(a_des)); %% command sent to motor, need to include filter to make sure negative cmds dun go thru
+    cmd_z = dot(transpose(zd_z),transpose(a_des_z)); %% command sent to motor, need to include filter to make sure negative cmds dun go thru
     cmd_z = 0.05*cmd_z;
     if cmd_z > 0.7
         cmd_z = 0.7;
     end
+    log_thrust = cmd_z;
     disp("cmd_z: ");
     disp(cmd_z);  
 
@@ -277,6 +308,13 @@ while ishandle(H)
 
     %% precession controller
     cmd_bodyrate = ppq * (body_rates(:,2) - mea_pitch_rate + body_rate_ref); % gain for cyclic, multiply this to azimuth sin or cos from quadrant, the other value is the desired heading  
+    log_bod_rates = cmd_bodyrate;
+
+%     bod_rate_cap = 0.117;
+%     if abs(cmd_bodyrate) > bod_rate_cap
+%         cmd_bodyrate = 0.117;
+%     end    
+
     desired_heading = exp.new_heading_input(desired_heading);
     quadrant = exp.quadrant_output(desired_heading);
     init_input = exp.flap_output(mea_rotation,quadrant,gain,desired_heading,abs(cmd_bodyrate));    
