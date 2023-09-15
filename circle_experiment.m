@@ -168,8 +168,14 @@ while ishandle(H)
 %     disp("pitch");
 %     disp(variable.gp.euler(2));
     hold on
+    
     p_array(end) = variable.gp.euler(2);
     t_array(end) = rb(k).TimeStamp;
+    if size(t_array) > 200
+        p_array(0)=[]
+        t_array(0)=[]
+    end
+        
     plot(t_array,p_array,'g');
     xlabel('counter');
     ylabel('pitch');
