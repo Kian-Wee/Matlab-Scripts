@@ -83,7 +83,7 @@ kvel = 65.0;
 kpos_z = 10;
 kd_z = 105;
 prp = [1,1]; % bodyrate gain
-ppq = 0.08; % body acc gain
+ppq = 0.07; % body acc gain
 
 % init a_des
 a_des = zeros(3,1);
@@ -114,6 +114,7 @@ update_rate = derivatives(7,1);
 
 sample_per_loop = derivatives(10,1);
 i = (sample_per_loop * 2) - 100; % counter
+c = (sample_per_loop * 2) - 100; % counter
 old_mag = 0;
 old_precession_rate_angle = 0;
 z_error_past = 0;
@@ -167,22 +168,22 @@ while ishandle(H)
    
 %     disp("pitch");
 %     disp(variable.gp.euler(2));
-    hold on
+%    hold on
     
-    p_array(end) = variable.gp.euler(2);
-    t_array(end) = rb(k).TimeStamp;
-    if size(t_array) > 200
-        p_array(0)=[]
-        t_array(0)=[]
-    end
-        
-    plot(t_array,p_array,'g');
-    xlabel('counter');
-    ylabel('pitch');
-    title("Pitch vs Time");
+%     p_array(end) = variable.gp.euler(2);
+%     t_array(end) = rb(k).TimeStamp;
+%     if size(t_array) > 200
+%         p_array(0)=[];
+%         t_array(0)=[];
+%     end
+%         
+%     plot(t_array,p_array,'g');
+%     xlabel('counter');
+%     ylabel('pitch');
+%     title("Pitch vs Time");
     
     drawnow
-    hold off
+    %hold off
     
     mea_pos = transpose(variable.gp.position); % extract position measurements in real time from opti track 
     mea_vel = transpose(variable.gp.velocity); % extract velocity measurements in real time from opti track
@@ -201,6 +202,7 @@ while ishandle(H)
  
     if i > sample_per_loop*2
         i = 1;
+        c=1;
     end 
     
     %%%% (Precession Rate Tracking)
@@ -238,7 +240,9 @@ while ishandle(H)
     a_des(1,:) = a_fb_xy + derivatives(3,i) - a_rd; % fits into the x axis of ades 
 
     %% z (can be used to test, needs to activate hover flaps mode)
-    z_error = mea_pos(3,1)-desired_alt;
+
+    z_error = mea_pos(3,1)-derivatives(13,c);
+    %z_error = mea_pos(3,1)-desired_alt;
     a_rd_z = mea_vel(3) * Dz;
     a_fb_z = kpos_z*z_error + kd_z*(z_error-z_error_past); % z
     disp ("alt: ");
@@ -322,7 +326,7 @@ while ishandle(H)
 %     end    
 
     desired_heading = exp.new_heading_input(desired_heading);
-    quadrant = exp.quadrant_output(desired_heading);
+    quadrant = exp.quadrant_output(desired_heading); 
     init_input = exp.flap_output(mea_rotation,quadrant,gain,desired_heading,abs(cmd_bodyrate));    
     final_flap_input = init_input(:,1) * 15;
     disp("quadrant");
@@ -334,7 +338,8 @@ while ishandle(H)
 %     trigger = trigger + 1;
 %     if mod(trigger,16) == 0
 
-    i = i + 1;
+    i = i + 50; % 50 is the number to update
+    c = c + 1;
 %     end
 %     trigger = trigger + update_rate; % temporary holding
 

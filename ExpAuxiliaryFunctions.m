@@ -296,7 +296,7 @@ classdef ExpAuxiliaryFunctions
         end
 
 
-        function [mag] = circle_setpoints_anti_cw(obj,speed,x_rad,y_rad,r)    
+         function [mag] = circle_setpoints_anti_cw(obj,speed,x_rad,y_rad,r)    
             %CIRCLE
             x_origin = x_rad;
             y_origin = y_rad;
@@ -305,7 +305,7 @@ classdef ExpAuxiliaryFunctions
             th = 0:pi/4:2*pi; % 8 pts
             x = radius * cos(th) + x_origin;
             y = radius * sin(th) + y_origin;
-           
+            %x = x*-1;
             
             % wpts = [1 4 4 3 -2 0; 0 1 2 4 3 1];
             %wpts_zy = [0 0.5 1.0 0.5 0 0.5 1.0 0.5 0 0.5 1.0 0.5 0 0.5 1.0 0.5 0 0.5 1.0 0.5 0 0.5 1.0 0.5 0 0.5 1.0 0.5 0 0.5 1.0 0.5 0; 0 -2 0 2 0 -2 0 2 0 -2 0 2 0 -2 0 2 0 -2 0 2 0 -2 0 2 0 -2 0 2 0 -2 0 2 0]; 
@@ -396,7 +396,7 @@ classdef ExpAuxiliaryFunctions
                 end
             end
             
-            mag = zeros(10,(sample_per_loop*2));
+            %mag = zeros(1,(sample_per_loop*2));
             
             mag(1,:) = sqrt((diff_pos(1,:)).^2 + (diff_pos(2,:)).^2); %pos
             mag(2,:) = sqrt((diff_vel(1,:)).^2 + (diff_vel(2,:)).^2); %vel
@@ -409,11 +409,15 @@ classdef ExpAuxiliaryFunctions
 
             mag(6,:) = direction; %direction
             mag(7,1) = time_per_setpt; %update rate
-            mag(8,1:9) = y; 
+            mag(8,1:9) = x; 
             mag(9,:) = direction_deg; %direction
             mag(10,1) = sample_per_loop;
+            mag(11,:) = invert_pos(1,1:sample_per_loop*2); % x
+            mag(12,:) = invert_pos(2,1:sample_per_loop*2); % y
+            mag(13,:) = flip(invert_pos(2,1:sample_per_loop*2)-0.5); % y
             %circle_xy(2,1:1130)
         end
+
 
         function [mag] = circle_setpoints_anti_cw_halved(obj,speed,x_rad,y_rad,r)    
             %CIRCLE
