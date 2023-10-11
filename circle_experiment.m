@@ -194,6 +194,7 @@ while ishandle(H)
     end
 
     mea_xy_pos_mag = sqrt((mea_pos(1,:)).^2 + (mea_pos(2,:)).^2);
+    % mea_pos(1,:) is positive X (along wall) and mea_pos(2,:) is negative Y (tangent to wall) => _| 
     mea_xy_vel_mag = sqrt((mea_vel(1,:)).^2 + (mea_vel(2,:)).^2);
     mea_euler = [0,mea_pitch,0]; % default seq is about ZYX
     mea_pitch_rate = variable.gp.euler_rate(2);
@@ -202,7 +203,7 @@ while ishandle(H)
  
     if i > sample_per_loop*2
         i = 1;
-        c=1;
+        c = 1;
     end 
     
     %%%% (Precession Rate Tracking)
@@ -245,8 +246,9 @@ while ishandle(H)
     %z_error = mea_pos(3,1)-desired_alt;
     a_rd_z = mea_vel(3) * Dz;
     a_fb_z = kpos_z*z_error + kd_z*(z_error-z_error_past); % z
-    disp ("alt: ");
-    disp(mea_pos(3,1));
+    % disp ("alt: ");
+    disp ("Pos & Att: X,Y,Z,Pitch ");
+    disp([mea_pos(1,1) mea_pos(2,1) mea_pos(3,1) mea_pitch]);
     a_des(3,:) = a_fb_z + g - a_rd_z;
     a_des_z(3,:) = a_fb_z + g - a_rd_z;
 
