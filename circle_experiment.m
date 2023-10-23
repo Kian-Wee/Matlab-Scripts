@@ -74,6 +74,9 @@ mea_pitch_rate = zeros(1,1); % euler angle for disk pitch rate which is body rol
 
 mea_rotation = zeros(1,1); % body yaw angle for azimuth, must be in RAD
 mea_xy_pos_mag = zeros(1,1);
+mea_x_pos = zeros(1,1);
+mea_y_pos = zeros(1,1);
+mea_z_pos = zeros(1,1);
 mea_xy_vel_mag = zeros(1,1);
 trigger = 1; % temporary trigger for now to go into offboard mode
 
@@ -137,7 +140,7 @@ while ishandle(H)
     % Output frame information
     %fprintf('\nFrame Index: %d\n',rb(1).FrameIndex);
 
-    % Update each rigid body
+    % Update each rigid body (data logging)
     for k = 1:numel(rb)
 
         % Check for correct body
@@ -159,7 +162,7 @@ while ishandle(H)
                     old_timestamp = rb(k).TimeStamp; 
 %                     disp(rad2deg(variable.("gp").euler));
 %                   data_arr=[data_arr; [now rb(k).TimeStamp string(rb(k).Name) variable.(my_field).position(1) variable.(my_field).position(2) variable.(my_field).position(3) variable.(my_field).quarternion(1) variable.(my_field).quarternion(2) variable.(my_field).quarternion(3) variable.(my_field).quarternion(4) variable.(my_field).euler(1) variable.(my_field).euler(2) variable.(my_field).euler(3) variable.(my_field).euler_rate(1) variable.(my_field).euler_rate(2) variable.(my_field).euler_rate(3) variable.(my_field).velocity(1) variable.(my_field).velocity(2) variable.(my_field).velocity(3)]];
-                    data_arr=[data_arr; [now rb(k).TimeStamp string(rb(k).Name) variable.(my_field).position(1) variable.(my_field).position(2) variable.(my_field).position(3) variable.(my_field).euler(3) variable.(my_field).euler(2) variable.(my_field).euler(1) variable.(my_field).velocity(1) variable.(my_field).velocity(2) variable.(my_field).velocity(3) log_bod_rates log_thrust log_head]];
+                    data_arr=[data_arr; [now rb(k).TimeStamp string(rb(k).Name) -1*variable.(my_field).position(2) variable.(my_field).position(1) variable.(my_field).position(3) variable.(my_field).euler(3) variable.(my_field).euler(2) variable.(my_field).euler(1) variable.(my_field).velocity(1) variable.(my_field).velocity(2) variable.(my_field).velocity(3) log_bod_rates log_thrust log_head]];
                     
                 end
             end
@@ -189,12 +192,16 @@ while ishandle(H)
     mea_vel = transpose(variable.gp.velocity); % extract velocity measurements in real time from opti track
     mea_rotation = variable.gp.euler(3); 
 
-    if variable.gp.euler(3) == 0
+    if variable.gp.euler(3) < 0.05 && variable.gp.euler(3) > -0.05  %% needa check if this will be logged at zero, if not mea_pitch will always be zero and we need a range
         mea_pitch = variable.gp.euler(2);
     end
 
+    %position assignment - "rotation matrix"
     mea_xy_pos_mag = sqrt((mea_pos(1,:)).^2 + (mea_pos(2,:)).^2);
     % mea_pos(1,:) is positive X (along wall) and mea_pos(2,:) is negative Y (tangent to wall) => _| 
+    mea_y_pos = mea_pos(1,:);
+    mea_x_pos = -1*mea_pos(2,:);
+    mea_z_pos = mea_pos(3,:);
     mea_xy_vel_mag = sqrt((mea_vel(1,:)).^2 + (mea_vel(2,:)).^2);
     mea_euler = [0,mea_pitch,0]; % default seq is about ZYX
     mea_pitch_rate = variable.gp.euler_rate(2);
@@ -243,12 +250,12 @@ while ishandle(H)
     %% z (can be used to test, needs to activate hover flaps mode)
 
     z_error = mea_pos(3,1)-derivatives(13,c);
-    %z_error = mea_pos(3,1)-desired_alt;
+    %z_error = mea_pos(3,1)-desired_alt; % this one is with the fixed height
     a_rd_z = mea_vel(3) * Dz;
     a_fb_z = kpos_z*z_error + kd_z*(z_error-z_error_past); % z
     % disp ("alt: ");
     disp ("Pos & Att: X,Y,Z,Pitch ");
-    disp([mea_pos(1,1) mea_pos(2,1) mea_pos(3,1) mea_pitch]);
+    disp([mea_x_pos mea_y_pos mea_z_pos mea_pitch]);
     a_des(3,:) = a_fb_z + g - a_rd_z;
     a_des_z(3,:) = a_fb_z + g - a_rd_z;
 
@@ -258,6 +265,7 @@ while ishandle(H)
     z_error_past = z_error;
 
     % direction (actual)
+    % desired_heading = atan2((derivatives(12,i)-mea_y_pos),(derivatives(11,i)-mea_x_pos));
     desired_heading = derivatives(6,i);
     true_heading = desired_heading;
     log_head = true_heading;
@@ -329,7 +337,7 @@ while ishandle(H)
 
     desired_heading = exp.new_heading_input(desired_heading);
     quadrant = exp.quadrant_output(desired_heading); 
-    init_input = exp.flap_output(mea_rotation,quadrant,gain,desired_heading,abs(cmd_bodyrate));    
+    init_input = exp.flap_output(mea_rotation,quadrant,gain,desired_heading,-1*abs(cmd_bodyrate));   % -1 for pitching backwards 
     final_flap_input = init_input(:,1) * 15;
     disp("quadrant");
     disp(quadrant);
