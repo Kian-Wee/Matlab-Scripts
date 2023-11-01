@@ -30,10 +30,7 @@ for i = 1:numel(rb)
     variable.(my_field).init(convertCharsToStrings(rb(i).Name));
 end
 
-disp('Outputing poses for: ');
-disp(variable)
-
-computerip="192.168.1.139"; % ip of computer to be written to
+computerip="192.168.1.137"; % ip of computer to be written to
 port=1234; % port of the computer to be written to
 %% Break loop if keypress to save to excel
 DlgH = figure;
@@ -249,8 +246,8 @@ while ishandle(H)
 
     %% z (can be used to test, needs to activate hover flaps mode)
 
-    z_error = mea_pos(3,1)-derivatives(13,c);
-    %z_error = mea_pos(3,1)-desired_alt; % this one is with the fixed height
+    %z_error = mea_pos(3,1)-derivatives(13,c);
+    z_error = mea_pos(3,1)-desired_alt; % this one is with the fixed height
     a_rd_z = mea_vel(3) * Dz;
     a_fb_z = kpos_z*z_error + kd_z*(z_error-z_error_past); % z
     % disp ("alt: ");
@@ -265,7 +262,7 @@ while ishandle(H)
     z_error_past = z_error;
 
     % direction (actual)
-    % desired_heading = atan2((derivatives(12,i)-mea_y_pos),(derivatives(11,i)-mea_x_pos));
+    %desired_heading = atan2((derivatives(12,i)-mea_y_pos),(derivatives(11,i)-mea_x_pos));
     desired_heading = derivatives(6,i);
     true_heading = desired_heading;
     log_head = true_heading;
