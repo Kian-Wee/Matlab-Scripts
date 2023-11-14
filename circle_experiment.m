@@ -42,8 +42,8 @@ drawnow
 
 exp = ExpAuxiliaryFunctions;
 % center for x and y (needa check again on optitrack)
-center_x = 2.5;
-center_y = 1.5;
+center_x = 2.8-0.5;
+center_y = 2.2;
 % inverted for y and x 
 mid_x = 2.0;
 mid_y = 2.0;
@@ -166,7 +166,7 @@ while ishandle(H)
                     old_timestamp = rb(k).TimeStamp; 
 %                     disp(rad2deg(variable.("gp").euler));
 %                   data_arr=[data_arr; [now rb(k).TimeStamp string(rb(k).Name) variable.(my_field).position(1) variable.(my_field).position(2) variable.(my_field).position(3) variable.(my_field).quarternion(1) variable.(my_field).quarternion(2) variable.(my_field).quarternion(3) variable.(my_field).quarternion(4) variable.(my_field).euler(1) variable.(my_field).euler(2) variable.(my_field).euler(3) variable.(my_field).euler_rate(1) variable.(my_field).euler_rate(2) variable.(my_field).euler_rate(3) variable.(my_field).velocity(1) variable.(my_field).velocity(2) variable.(my_field).velocity(3)]];
-                    data_arr=[data_arr; [now rb(k).TimeStamp string(rb(k).Name) -1*variable.(my_field).position(2) variable.(my_field).position(1) variable.(my_field).position(3) variable.(my_field).euler(3) variable.(my_field).euler(2) variable.(my_field).euler(1) variable.(my_field).velocity(1) variable.(my_field).velocity(2) variable.(my_field).velocity(3) log_bod_rates log_thrust log_head]];
+                    data_arr=[data_arr; [now rb(k).TimeStamp string(rb(k).Name) variable.(my_field).position(1) variable.(my_field).position(2) variable.(my_field).position(3) variable.(my_field).euler(3) variable.(my_field).euler(2) variable.(my_field).euler(1) variable.(my_field).velocity(1) variable.(my_field).velocity(2) variable.(my_field).velocity(3) log_bod_rates log_thrust log_head]];
                     
                 end
             end
@@ -205,8 +205,8 @@ while ishandle(H)
     %mea_xy_pos_mag = sqrt((mea_pos(1,:)).^2 + (mea_pos(2,:)).^2);
     
     % mea_pos(1,:) is positive X (along wall) and mea_pos(2,:) is negative Y (tangent to wall) => _| 
-    mea_y_pos = mea_pos(1,:);
-    mea_x_pos = -1*mea_pos(2,:);
+    mea_y_pos = mea_pos(2,:);
+    mea_x_pos = mea_pos(1,:);
     mea_z_pos = mea_pos(3,:);
     mea_xy_pos_mag = sqrt((mea_x_pos-mea_x_pos_past).^2 + (mea_y_pos-mea_y_pos_past).^2);
     mea_x_pos_past = mea_x_pos;
@@ -220,7 +220,7 @@ while ishandle(H)
 %%  reset
  
     if i > sample_per_loop*2
-        i = 1;
+        i = 30;
         c = 1;
     end 
     
@@ -368,10 +368,11 @@ while ishandle(H)
    
     r_x = mea_x_pos - center_x;
     r_y = mea_y_pos - center_y;
-    rad_data = sqrt((r_x).^2 + (r_y).^2) - radius;
+    rad_data = radius - sqrt((r_x).^2 + (r_y).^2);
 
 
     i = i + 50 + (dpp * ceil(rad_data)); % 50 is the number to update
+    %i = i + 200; % 50 is the number to update
     c = c + 1;
 %     end
 %     trigger = trigger + update_rate; % temporary holding
