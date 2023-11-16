@@ -42,8 +42,8 @@ drawnow
 
 exp = ExpAuxiliaryFunctions;
 % center for x and y (needa check again on optitrack)
-center_x = 2.8-0.5;
-center_y = 2.2;
+center_x = 2.85-0.5;
+center_y = 1.85;
 % inverted for y and x 
 mid_x = 2.0;
 mid_y = 2.0;
@@ -89,8 +89,8 @@ kvel = 65.0;
 kpos_z = 10;
 kd_z = 105;
 prp = [1,1]; % bodyrate gain
-ppq = 0.07; % body acc gain
-dpp = 10;
+ppq = 0.2; % body acc gain
+dpp = 5;
 
 % init a_des
 a_des = zeros(3,1);
@@ -196,8 +196,9 @@ while ishandle(H)
     mea_vel = transpose(variable.gp.velocity); % extract velocity measurements in real time from opti track
     mea_rotation = variable.gp.euler(3); 
 
-    if variable.gp.euler(3) < 0.05 && variable.gp.euler(3) > -0.05  %% needa check if this will be logged at zero, if not mea_pitch will always be zero and we need a range
-        mea_pitch = variable.gp.euler(2);
+    if variable.gp.euler(3) < deg2rad(10) && variable.gp.euler(3) > deg2rad(-10)  %% needa check if this will be logged at zero, if not mea_pitch will always be zero and we need a range
+    %if abs(variable.gp.euler(3)) < abs(derivatives(6,i) + deg2rad(10)) && variable.gp.euler(3) > -0.05  %% needa check if this will be logged at zero, if not mea_pitch will always be zero and we need a range
+        mea_pitch = abs(variable.gp.euler(2));
     end
 
     %position assignment - "rotation matrix"
@@ -220,7 +221,7 @@ while ishandle(H)
 %%  reset
  
     if i > sample_per_loop*2
-        i = 30;
+        i = 1;
         c = 1;
     end 
     
@@ -333,9 +334,9 @@ while ishandle(H)
 %     end
    
     %% precession controller
-    pc = 0.01 * (omega_mea - precession_rate); 
-    disp("precession signal");
-    disp(pc);
+    %pc = 0.01 * (omega_mea - precession_rate); 
+    %disp("precession signal");
+    %disp(pc);
 
     %% inclusion of diff flatness component
     cmd_bodyrate = (ppq * (body_rates(:,2) - mea_pitch_rate)) + body_rate_ref; % now bod rate ref is separate from the gain, gain for cyclic, multiply this to azimuth sin or cos from quadrant, the other value is the desired heading  
@@ -368,11 +369,11 @@ while ishandle(H)
    
     r_x = mea_x_pos - center_x;
     r_y = mea_y_pos - center_y;
-    rad_data = radius - sqrt((r_x).^2 + (r_y).^2);
+    rad_data = sqrt((r_x).^2 + (r_y).^2) - radius;
 
 
-    i = i + 50 + (dpp * ceil(rad_data)); % 50 is the number to update
-    %i = i + 200; % 50 is the number to update
+    %i = i + 50 + (dpp * ceil(rad_data)); % 50 is the number to update
+    i = i + 50; % 50 is the number to update
     c = c + 1;
 %     end
 %     trigger = trigger + update_rate; % temporary holding

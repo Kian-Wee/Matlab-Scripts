@@ -26,7 +26,7 @@ classdef body_obj < handle
         obj.position = [rb.Position(1)/1000 rb.Position(2)/1000 rb.Position(3)/1000];
         eul_zyz = quat2eul(obj.quarternion,'ZYZ'); % zyz, yaw pitch roll
         eul_xyz = quat2eul(obj.quarternion,'XYZ'); %  xyz, roll pitch yaw
-        eul = [0,eul_xyz(2),eul_xyz(3)];
+        eul = [0,eul_xyz(1),eul_xyz(3)];
         eul(3) = -eul(3);   % 3 = yaw, 2 = pitch, 1 = roll 
         obj.euler=eul;
         obj.euler_rate=(obj.euler-obj.past_euler)/((rb.TimeStamp-obj.past_time)*1000);
