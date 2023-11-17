@@ -90,7 +90,7 @@ kpos_z = 10;
 kd_z = 105;
 prp = [1,1]; % bodyrate gain
 ppq = 0.2; % body acc gain
-dpp = 5;
+dpp = 30;
 
 % init a_des
 a_des = zeros(3,1);
@@ -196,20 +196,20 @@ while ishandle(H)
     mea_vel = transpose(variable.gp.velocity); % extract velocity measurements in real time from opti track
     mea_rotation = variable.gp.euler(3); 
 
-    if variable.gp.euler(3) < deg2rad(10) && variable.gp.euler(3) > deg2rad(-10)  %% needa check if this will be logged at zero, if not mea_pitch will always be zero and we need a range
+    if variable.gp.euler(3) < deg2rad(10) && variable.gp.euler(3) > deg2rad(-10) %% needa check if this will be logged at zero, if not mea_pitch will always be zero and we need a range
     %if abs(variable.gp.euler(3)) < abs(derivatives(6,i) + deg2rad(10)) && variable.gp.euler(3) > -0.05  %% needa check if this will be logged at zero, if not mea_pitch will always be zero and we need a range
         mea_pitch = abs(variable.gp.euler(2));
     end
 
     %position assignment - "rotation matrix"
     
-    %mea_xy_pos_mag = sqrt((mea_pos(1,:)).^2 + (mea_pos(2,:)).^2);
+    mea_xy_pos_mag = sqrt((mea_pos(1,:)).^2 + (mea_pos(2,:)).^2); % needa use this for now
     
     % mea_pos(1,:) is positive X (along wall) and mea_pos(2,:) is negative Y (tangent to wall) => _| 
     mea_y_pos = mea_pos(2,:);
     mea_x_pos = mea_pos(1,:);
     mea_z_pos = mea_pos(3,:);
-    mea_xy_pos_mag = sqrt((mea_x_pos-mea_x_pos_past).^2 + (mea_y_pos-mea_y_pos_past).^2);
+    %mea_xy_pos_mag = sqrt((mea_x_pos-mea_x_pos_past).^2 + (mea_y_pos-mea_y_pos_past).^2);
     mea_x_pos_past = mea_x_pos;
     mea_y_pos_past = mea_y_pos;
     mea_z_pos_past = mea_z_pos;
@@ -372,8 +372,12 @@ while ishandle(H)
     rad_data = sqrt((r_x).^2 + (r_y).^2) - radius;
 
 
-    %i = i + 50 + (dpp * ceil(rad_data)); % 50 is the number to update
-    i = i + 50; % 50 is the number to update
+    i = i + 50 + (dpp * ceil(rad_data)); % 50 is the number to update
+
+    if i < 5
+        i = 5;
+    end
+    %i = i + 50; % 50 is the number to update
     c = c + 1;
 %     end
 %     trigger = trigger + update_rate; % temporary holding
