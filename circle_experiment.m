@@ -5,8 +5,8 @@ clc
 
 %% Variables
 import body_obj.*
-
-rate=1/360; %in 1/Hz, how fast the graph updates
+hz = 300; % 100 hz for optitrack
+rate= 1/hz; %in 1/Hz, how fast the graph updates
 bodyname=["gp"]; % multiple bodies allowed
 %data_arr=["Mtime","Otime","name","x","y","z","qx","qy","qz","qw","euy","eup","eur","eury","eurp","eurr","vx","vy", "vz","pitch_norm"]; % Array to store to excel
 data_arr=["Mtime","Otime","name","x","y","z","euy","eup","eur","vx","vy","vz","bod_rates","thrust","heading"]; % Array to store to excel
@@ -48,8 +48,8 @@ center_y = 1.85;
 mid_x = 2.0;
 mid_y = 2.0;
 radius = 0.5;
-speed = 0.3;
-derivatives = exp.circle_setpoints_anti_cw(speed,mid_x,mid_y,radius); % circle anti_cw setpoints, radius 0.5, speed 0.5
+speed = 2.0;
+derivatives = exp.circle_setpoints_anti_cw(speed,mid_x,mid_y,radius,hz); % circle anti_cw setpoints, radius 0.5, speed 0.5
 % derivatives = exp.circle_setpoints_cw(1,-2,2,1); % circle cw setpoints
 
 % vel = load("invert_vel.mat");
@@ -84,8 +84,8 @@ mea_xy_vel_mag = zeros(1,1);
 trigger = 1; % temporary trigger for now to go into offboard mode
 
 % gains
-kpos = 55.0;
-kvel = 65.0;
+kpos = 120.0;
+kvel = 68.0;
 kpos_z = 10;
 kd_z = 105;
 prp = [1,1]; % bodyrate gain
@@ -202,14 +202,12 @@ while ishandle(H)
     end
 
     %position assignment - "rotation matrix"
-    
-    mea_xy_pos_mag = sqrt((mea_pos(1,:)).^2 + (mea_pos(2,:)).^2); % needa use this for now
-    
     % mea_pos(1,:) is positive X (along wall) and mea_pos(2,:) is negative Y (tangent to wall) => _| 
     mea_y_pos = mea_pos(2,:);
     mea_x_pos = mea_pos(1,:);
     mea_z_pos = mea_pos(3,:);
-    %mea_xy_pos_mag = sqrt((mea_x_pos-mea_x_pos_past).^2 + (mea_y_pos-mea_y_pos_past).^2);
+    %mea_xy_pos_mag = sqrt(mea_x_pos.^2 + mea_y_pos.^2); % needa use this for now
+    mea_xy_pos_mag = sqrt((mea_x_pos-mea_x_pos_past).^2 + (mea_y_pos-mea_y_pos_past).^2);
     mea_x_pos_past = mea_x_pos;
     mea_y_pos_past = mea_y_pos;
     mea_z_pos_past = mea_z_pos;
@@ -339,7 +337,7 @@ while ishandle(H)
     %disp(pc);
 
     %% inclusion of diff flatness component
-    cmd_bodyrate = (ppq * (body_rates(:,2) - mea_pitch_rate)) + body_rate_ref; % now bod rate ref is separate from the gain, gain for cyclic, multiply this to azimuth sin or cos from quadrant, the other value is the desired heading  
+    cmd_bodyrate = ppq * (body_rates(:,2) - mea_pitch_rate + body_rate_ref); % reverted (now bod rate ref is separate from the gain) gain for cyclic, multiply this to azimuth sin or cos from quadrant, the other value is the desired heading
     log_bod_rates = cmd_bodyrate;
 
 %     bod_rate_cap = 0.117;
@@ -372,12 +370,12 @@ while ishandle(H)
     rad_data = sqrt((r_x).^2 + (r_y).^2) - radius;
 
 
-    i = i + 50 + (dpp * ceil(rad_data)); % 50 is the number to update
-
-    if i < 5
-        i = 5;
-    end
-    %i = i + 50; % 50 is the number to update
+%     i = i + 50 + (dpp * ceil(rad_data)); % 50 is the number to update
+% 
+%     if i < 5
+%         i = 5;
+%     end
+    i = i + 50; % 50 or 30 is the number to update
     c = c + 1;
 %     end
 %     trigger = trigger + update_rate; % temporary holding

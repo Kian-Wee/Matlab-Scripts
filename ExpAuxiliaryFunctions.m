@@ -185,8 +185,8 @@ classdef ExpAuxiliaryFunctions
                 if activate_cos == 0
                     if (azimuth < upper_bound && azimuth > lower_bound) || (azimuth > -pi + lower_bound && azimuth < -pi + upper_bound) % otherside first
                         tilt_xw = sin(azimuth); % tilt about yw heading in x direction 
-                        pitch = tilt_xw * gain_disk_pitch * -1; % gain disk * -1 always positive
-                        %pitch = tilt_xw; % only for cyclic y
+                        %pitch = tilt_xw * gain_disk_pitch * -1; % gain disk * -1 always positive
+                        pitch = tilt_xw; % only for cyclic y
                         Motor_Pulse =  (pitch/abs(pitch)) * 1;
                     else
                         pitch = 0;
@@ -195,13 +195,13 @@ classdef ExpAuxiliaryFunctions
                 else
                     if azimuth < upper_bound && azimuth > lower_bound
                         tilt_xw = cos(azimuth); % tilt about yw heading in x direction 
-                        pitch = tilt_xw * gain_disk_pitch * -1; % gain disk * -1 always positive
-                        %pitch = tilt_xw; % only for cyclic y
+                        %pitch = tilt_xw * gain_disk_pitch * -1; % gain disk * -1 always positive
+                        pitch = tilt_xw; % only for cyclic y
                         Motor_Pulse =  (pitch/abs(pitch)) * 1;
                     elseif azimuth > pi + lower_bound || azimuth < -pi + upper_bound % otherside first
                         tilt_xw = cos(azimuth); % tilt about yw heading in x direction 
-                        pitch = tilt_xw * gain_disk_pitch * -1; % gain disk * -1 always positive
-                        %pitch = tilt_xw; % only for cyclic y
+                        %pitch = tilt_xw * gain_disk_pitch * -1; % gain disk * -1 always positive
+                        pitch = tilt_xw; % only for cyclic y
                         Motor_Pulse =  (pitch/abs(pitch)) * 1;
                     else
                         pitch = 0;
@@ -299,7 +299,7 @@ classdef ExpAuxiliaryFunctions
         end
 
 
-         function [mag] = circle_setpoints_anti_cw(obj,speed,x_rad,y_rad,r)    
+        function [mag] = circle_setpoints_anti_cw(obj,speed,x_rad,y_rad,r,hz)    
             %CIRCLE
             x_origin = x_rad;
             y_origin = y_rad;
@@ -308,7 +308,7 @@ classdef ExpAuxiliaryFunctions
             th = 0:pi/4:2*pi; % 8 pts
             x = radius * cos(th) + x_origin;
             y = radius * sin(th) + y_origin;
-            %x = x*-1;
+           
             
             % wpts = [1 4 4 3 -2 0; 0 1 2 4 3 1];
             %wpts_zy = [0 0.5 1.0 0.5 0 0.5 1.0 0.5 0 0.5 1.0 0.5 0 0.5 1.0 0.5 0 0.5 1.0 0.5 0 0.5 1.0 0.5 0 0.5 1.0 0.5 0 0.5 1.0 0.5 0; 0 -2 0 2 0 -2 0 2 0 -2 0 2 0 -2 0 2 0 -2 0 2 0 -2 0 2 0 -2 0 2 0 -2 0 2 0]; 
@@ -321,7 +321,7 @@ classdef ExpAuxiliaryFunctions
 %             time_per_setpt = (time_per_eigth * 8) / sample_per_loop; 
 
             time_per_eigth = (pi/4)/omega; % 0.784
-            hz = 360;
+            % hz = 100;
             time_per_setpt = 1/hz;
             sample_per_loop = (time_per_eigth * 8) / time_per_setpt;  % 2258
             sample_per_loop = ceil(sample_per_loop); % only need to change here...
@@ -417,7 +417,7 @@ classdef ExpAuxiliaryFunctions
             mag(10,1) = sample_per_loop;
             mag(11,:) = invert_pos(1,1:sample_per_loop*2); % x
             mag(12,:) = invert_pos(2,1:sample_per_loop*2); % y
-            mag(13,:) = flip(invert_pos(2,1:sample_per_loop*2)-0.5); % y
+            mag(13,:) = invert_pos(2,1:sample_per_loop*2)-0.5; % y
             %circle_xy(2,1:1130)
         end
 
