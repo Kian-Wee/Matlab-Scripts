@@ -13,7 +13,7 @@ data_arr=["Mtime","Otime","name","x","y","z","euy","eup","eur","vx","vy","vz","b
 
 %% Create OptiTrack object
 obj = OptiTrack;
-Initialize(obj,'192.168.1.5','multicast'); % IP of the optitrack com, Ensure broadcast frame id is on, loop interface is set to this ip and transmission type is set to multicast
+Initialize(obj,'192.168.1.5','multicast'); %Ensure broadcast frame id is on, loop interface is set to this ip and transmission type is set to multicast
 
 up = udpport("IPV4");
 % up = udpport("datagram","OutputDatagramSize",3);
@@ -30,7 +30,7 @@ for i = 1:numel(rb)
     variable.(my_field).init(convertCharsToStrings(rb(i).Name));
 end
 
-computerip="192.168.1.184"; % ip of monocopter to be written to
+computerip="192.168.1.137"; % ip of computer to be written to
 port=1234; % port of the computer to be written to
 %% Break loop if keypress to save to excel
 DlgH = figure;
@@ -371,11 +371,10 @@ while ishandle(H)
 %         cmd_bodyrate = 0.117;
 %     end    
 
-    desired_heading = exp.new_heading_input(desired_heading);
-    desired_heading = 0;
+    desired_heading = exp.sam_new_heading_input(desired_heading);
     quadrant = exp.quadrant_output(desired_heading); 
     init_input = exp.flap_output(mea_rotation,quadrant,desired_heading,-1*abs(cmd_bodyrate));   % -1 for pitching backwards 
-    final_flap_input = init_input(:,1) * 100;
+    final_flap_input = init_input(:,1) * 15;
     disp("quadrant");
     disp(quadrant);
     disp("heading");
@@ -408,7 +407,7 @@ while ishandle(H)
 %     trigger = trigger + update_rate; % temporary holding
 
     
-    input = [true_heading,final_flap_input,cmd_z,mea_rotation]; % heading, flap, motor, yaw
+    input = [true_heading,final_flap_input,cmd_z,mea_rotation]; %heading, flap, motor, yaw
     fprintf('Input [%f,%f,%f]\n', input);
     disp("counter");
     disp(i);

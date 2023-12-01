@@ -9,7 +9,9 @@ classdef body_obj < handle
       past_euler=[0,0,0];
       euler_rate=[0 0 0];
       velocity=[0 0 0];
+      acceleration=[0 0 0];
       past_position=[0,0,0];
+      past_velocity=[0,0,0];
       past_time=0;
       pitch_norm=0;
       body_roll;
@@ -38,6 +40,13 @@ classdef body_obj < handle
         else
             obj.velocity=(obj.position-obj.past_position)/((rb.TimeStamp-obj.past_time)*1000);
         end
+
+        if obj.velocity-obj.past_velocity == 0 %Reject 0 division
+            obj.acceleration=[0 0 0];
+        else
+            obj.acceleration=(obj.velocity-obj.past_velocity)/((rb.TimeStamp-obj.past_time)*1000);
+        end
+
 %         obj.pitch_norm=((-rb.Position(2)*cos(obj.euler(1)))/sin(obj.euler(1)));
         disp("yaw     pitch    roll");
         disp([obj.euler(3) obj.euler(2) obj.euler(1)]);
@@ -46,6 +55,7 @@ classdef body_obj < handle
         %disp([obj.euler_rate(3) obj.euler_rate(2) obj.euler_rate(1)])
          %disp(obj.euler(2))
          %disp(obj.euler(1))
+        obj.past_velocity = obj.velocity;
         obj.past_position = obj.position;
         obj.past_euler=obj.euler;
         obj.past_time=rb.TimeStamp;

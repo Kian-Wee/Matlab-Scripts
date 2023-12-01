@@ -1,7 +1,18 @@
 classdef ExpAuxiliaryFunctions
+
     methods
 
         function [new_heading]  = new_heading_input(obj,heading)
+            phase_delay = pi/4;
+            new_heading = heading + phase_delay;
+
+            if new_heading > pi
+                new_heading = (new_heading - pi) - pi;
+            end
+
+        end
+
+        function [new_heading]  = sam_new_heading_input(obj,heading)
             phase_delay = pi/2 + pi/4;
             new_heading = heading + phase_delay;
 
@@ -52,7 +63,7 @@ classdef ExpAuxiliaryFunctions
             
         end
 
-        function [input] = flap_output(obj, azi, quadrant, gain_disk_pitch, desired_heading, body_rate_y)
+        function [input] = flap_output(obj, azi, quadrant, desired_heading, body_rate_y)
             % rmb to put filter to prevent over actuation
             input = zeros(1,2);
             upper_bound = zeros(1,1);
@@ -417,10 +428,13 @@ classdef ExpAuxiliaryFunctions
             mag(10,1) = sample_per_loop;
             mag(11,:) = invert_pos(1,1:sample_per_loop*2); % x
             mag(12,:) = invert_pos(2,1:sample_per_loop*2); % y
-            mag(13,:) = invert_pos(2,1:sample_per_loop*2)-0.5; % y
+            mag(13,:) = invert_pos(2,1:sample_per_loop*2)-0.5; % z
+            mag(14,:) = invert_vel(1,1:sample_per_loop*2); % x
+            mag(15,:) = invert_vel(2,1:sample_per_loop*2); % y
+            mag(16,:) = invert_acc(1,1:sample_per_loop*2); % x
+            mag(17,:) = invert_acc(2,1:sample_per_loop*2); % y
             %circle_xy(2,1:1130)
         end
-
 
         function [mag] = circle_setpoints_anti_cw_halved(obj,speed,x_rad,y_rad,r)    
             %CIRCLE
