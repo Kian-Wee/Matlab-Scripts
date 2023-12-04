@@ -48,7 +48,7 @@ center_y = 1.85;
 mid_x = 2.0;
 mid_y = 2.0;
 radius = 0.5;
-speed = 2.0;
+speed = 3.0;
 derivatives = exp.circle_setpoints_anti_cw(speed,mid_x,mid_y,radius,hz); % circle anti_cw setpoints, radius 0.5, speed 0.5
 % derivatives = exp.circle_setpoints_cw(1,-2,2,1); % circle cw setpoints
 
@@ -85,12 +85,12 @@ mea_xy_acc_mag = zeros(1,1);
 trigger = 1; % temporary trigger for now to go into offboard mode
 
 % gains
-kpos = 120.0;
-kvel = 68.0;
+kpos = 1600.0;
+kvel = 1300.0;
 kpos_z = 10;
 kd_z = 105;
 prp = [1,1]; % bodyrate gain
-ppq = 0.2; % body acc gain
+ppq = 0.45; % body acc gain
 dpp = 30;
 
 % init a_des
@@ -370,12 +370,12 @@ while ishandle(H)
 %     if abs(cmd_bodyrate) > bod_rate_cap
 %         cmd_bodyrate = 0.117;
 %     end    
-
+    %desired_heading = 0;
     desired_heading = exp.new_heading_input(desired_heading);
-    desired_heading = 0;
+    
     quadrant = exp.quadrant_output(desired_heading); 
-    init_input = exp.flap_output(mea_rotation,quadrant,desired_heading,-1*abs(cmd_bodyrate));   % -1 for pitching backwards 
-    final_flap_input = init_input(:,1) * 100;
+    init_input = exp.flap_output(mea_rotation,quadrant,desired_heading, -1*abs(cmd_bodyrate));   % -1 for pitching backwards 
+    final_flap_input = deg2rad(init_input(:,1) * 25);
     disp("quadrant");
     disp(quadrant);
     disp("heading");

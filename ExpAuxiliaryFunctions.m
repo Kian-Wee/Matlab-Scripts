@@ -3,7 +3,7 @@ classdef ExpAuxiliaryFunctions
     methods
 
         function [new_heading]  = new_heading_input(obj,heading)
-            phase_delay = pi/4;
+            phase_delay = pi/2 + pi/4;
             new_heading = heading + phase_delay;
 
             if new_heading > pi
