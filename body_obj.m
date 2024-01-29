@@ -29,9 +29,9 @@ classdef body_obj < handle
         eul_zyz = quat2eul(obj.quarternion,'ZYZ'); % zyz, yaw pitch roll
         eul_xyz = quat2eul(obj.quarternion,'XYZ'); %  xyz, roll pitch yaw
         eul = [0,eul_xyz(1),eul_xyz(3)];
-        eul(3) = -eul(3);   % 3 = yaw, 2 = pitch, 1 = roll 
-        obj.euler=eul;
-        obj.euler_rate=(obj.euler-obj.past_euler)/((rb.TimeStamp-obj.past_time)*1000);
+        eul(3) = -eul(3);   % (3 = yaw, 2 = pitch, 1 = roll) for the disk 
+        obj.euler = eul;
+        obj.euler_rate = (obj.euler-obj.past_euler)/((rb.TimeStamp-obj.past_time)*1000);
 %          obj.pitch_norm=(((obj.euler(3)*sin(obj.euler(1))))+((obj.euler(2)*cos(obj.euler(1)))));
 
         %obj.euler=rad2deg(eul);

@@ -1,5 +1,5 @@
 classdef ExpAuxiliaryFunctions
-
+    
     methods
 
         function [new_heading]  = new_heading_input(obj,heading)
@@ -12,6 +12,7 @@ classdef ExpAuxiliaryFunctions
 
         end
 
+
         function [new_heading]  = sam_new_heading_input(obj,heading)
             phase_delay = pi/2 + pi/4;
             new_heading = heading + phase_delay;
@@ -21,6 +22,35 @@ classdef ExpAuxiliaryFunctions
             end
 
         end
+
+        
+        function [new_heading]  = centrifugal_heading_input(obj,heading) % anti-cw cyclic to compensate for centrifugal force
+
+            if heading > 0
+                if heading > pi/2
+                   new_heading = -pi + (pi/2 - (pi - heading));
+                elseif heading == pi
+                   new_heading = -pi/2; 
+                else
+                   new_heading = heading + pi/2;
+                end
+
+            elseif heading < 0
+                if heading < -pi/2
+                   new_heading = heading + pi/2;
+                elseif heading == -pi
+                   new_heading = -pi/2; 
+                else
+                   new_heading = pi/2 + heading;
+                end
+            
+            elseif heading == 0
+                new_heading = pi/2 + heading;
+                
+            end
+
+        end
+
 
         function [quadrant] = quadrant_output(obj,heading)
     
@@ -62,6 +92,7 @@ classdef ExpAuxiliaryFunctions
             quadrant = quad;
             
         end
+
 
         function [input] = flap_output(obj, azi, quadrant, desired_heading, body_rate_y)
             % rmb to put filter to prevent over actuation
@@ -122,7 +153,7 @@ classdef ExpAuxiliaryFunctions
             
                 
             elseif quadrant == 1.5 
-                upper_bound = pi + pi/4; 
+                upper_bound = pi/2 + pi/4; 
                 lower_bound = pi/4; 
                 % no need for lower bound
                 if abs(azimuth) > upper_bound || abs(azimuth) < lower_bound
@@ -222,7 +253,7 @@ classdef ExpAuxiliaryFunctions
             
             
             elseif quadrant == 3.5
-                upper_bound = pi + pi/4; 
+                upper_bound = pi/2 + pi/4; 
                 lower_bound = pi/4; 
                 % no need for lower bound
                 if abs(azimuth) > upper_bound || abs(azimuth) < lower_bound
@@ -285,7 +316,12 @@ classdef ExpAuxiliaryFunctions
             %     pitch = 0;
             % end
             
-            input(:,1) = pitch * body_rate_y;
+            %input(:,1) = pitch * body_rate_y;
+            if pitch == 0
+                input(:,1) = pitch * body_rate_y;
+            else
+                input(:,1) = pitch/norm(pitch) * body_rate_y; %% testing 
+            end
             input(:,2) = Motor_Pulse;
             
         end
